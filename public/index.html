@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Project ION</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/main.js"></script>
+
+</head>
+<body>
+    <div class="nav__toggle">&lt;&lt;</div>
+    <nav class="nav__left nav__open">
+        <ul>
+            <li class="nav__link">Home</li>
+            <li class="nav__link">About</li>
+            <li class="nav__link">Contact</li>
+            <li class="nav__link">Login</li>
+        </ul>
+    </nav>
+    <div class="menu">
+        <ul>
+            <li class="parent__menu" data-sub-menu="menu-style-submenu">Style as...</li>
+            <ul id="menu-style-submenu" class="sub__menu toggle__closed">
+                <li class="menu__link" data-op="style" data-type="heading-1">Heading #1</li>
+                <li class="menu__link" data-op="style" data-type="heading-2">Heading #2</li>
+                <li class="menu__link" data-op="style" data-type="heading-3">Heading #3</li>
+                <li class="menu__link" data-op="style" data-type="paragraph">Paragraph</li>
+                <li class="menu__link" data-op="style" data-type="quote">Quote</li>
+                <li class="menu__link" data-op="style" data-type="code">Code</li>
+                <li class="menu__link" data-op="style" data-type="table">Table</li>
+                <li class="parent__menu" data-sub-menu="menu-list-submenu">List...</li>
+                <ul id="menu-list-submenu" class="sub__menu toggle__closed">
+                    <li class="menu__link" data-op="style" data-type="numbered_list">Numbered List</li>
+                    <li class="menu__link" data-op="style" data-type="bullet_list">Bullet List</li>
+                    <li class="menu__link" data-op="style" data-type="expando_list">Expando List</li>
+                </ul>   
+            </ul>
+            <li class="menu__link" data-op="del">Delete</li>
+            <li class="menu__link" data-op="copy">Copy</li>
+            <li class="menu__link" data-op="dup">Duplicate</li>
+            <li class="menu__link" data-op="create_page">Create page...</li>
+            <li class="menu__link" data-op="copy_block_link">Copy block link</li>
+        </ul>
+    </div>
+    <div class="body">
+        <ion-block id="4353455-131323-12331321" type="heading-1">Project ION</ion-block>
+        <ion-block id="4353455-131323-12331322" type="paragraph">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusantium, adipisci alias aliquid amet animi aperiam asperiores atque autem blanditiis consequatur consequuntur corporis cumque cupiditate delectus deleniti dicta dignissimos dolorum ducimus ea earum eius eligendi eos error esse est et eum eveniet excepturi exercitationem expedita explicabo facere facilis fugiat fugit harum hic id illum impedit in incidunt ipsa ipsum iste itaque iure iusto labore laboriosam laborum laudantium libero magnam magni maiores maxime minima minus molestiae mollitia nam natus necessitatibus nemo neque nihil nisi nobis non nostrum nulla numquam obcaecati odio officia officiis omnis optio pariatur perferendis perspiciatis placeat porro possimus praesentium provident quae quam quasi quia quibusdam quisquam quod quos ratione recusandae reiciendis rem repellat repellendus reprehenderit repudiandae rerum saepe sapiente sequi similique sint sit soluta sunt suscipit tempora tenetur totam ullam unde vel veniam veritatis voluptas voluptate voluptatem voluptates voluptatibus voluptatum.</ion-block>
+        <ion-block id="4353455-131323-12331323" type="quote">I didn't get there by wishing for it or hoping for it, but by working for it.<br/>- Estée Lauder -<br/></ion-block>
+        <ion-block id="4353455-131323-12331324" type="code">function styleOperation(el) {
+            const id = getState(el.parentElement, 'elementId');
+            const parentElement = document.querySelector('div[data-id="'+id+'"]');
+            const oldType = parentElement.dataset.type;
+            const newType = el.dataset.type;
+            const element = parentElement.querySelector('.editable');
+        
+            console.log(`Changing ${id} from ${oldType} to ${newType}`);
+            parentElement.dataset.type = newType;
+            element.classList.remove(oldType);
+            element.classList.add(newType);
+        }</ion-block>
+                    <!-- <div class="element" data-type="heading-1" data-id="4353455-131323-12331323">
+            <menu-toggle></menu-toggle>
+            <div class="el editable heading-1" contenteditable="true">Project ION</div>
+        </div> 
+        <div class="element" data-type="paragraph" data-id="4353455-131323-12331324">
+            <menu-toggle></menu-toggle>
+            <div class="el editable paragraph"  contenteditable="true">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusantium, adipisci alias aliquid amet animi aperiam asperiores atque autem blanditiis consequatur consequuntur corporis cumque cupiditate delectus deleniti dicta dignissimos dolorum ducimus ea earum eius eligendi eos error esse est et eum eveniet excepturi exercitationem expedita explicabo facere facilis fugiat fugit harum hic id illum impedit in incidunt ipsa ipsum iste itaque iure iusto labore laboriosam laborum laudantium libero magnam magni maiores maxime minima minus molestiae mollitia nam natus necessitatibus nemo neque nihil nisi nobis non nostrum nulla numquam obcaecati odio officia officiis omnis optio pariatur perferendis perspiciatis placeat porro possimus praesentium provident quae quam quasi quia quibusdam quisquam quod quos ratione recusandae reiciendis rem repellat repellendus reprehenderit repudiandae rerum saepe sapiente sequi similique sint sit soluta sunt suscipit tempora tenetur totam ullam unde vel veniam veritatis voluptas voluptate voluptatem voluptates voluptatibus voluptatum.</div>
+        </div>
+        <div class="element" data-type="quote" data-id="4353455-131323-12331325">
+            <menu-toggle></menu-toggle>
+            <div class="el editable quote" contenteditable="true">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusantium, adipisci alias aliquid amet animi aperiam asperiores atque autem blanditiis consequatur consequuntur corporis cumque cupiditate delectus deleniti dicta dignissimos dolorum ducimus ea earum eius eligendi eos error esse est et eum eveniet excepturi exercitationem expedita explicabo facere facilis fugiat fugit harum hic id illum impedit in incidunt ipsa ipsum iste itaque iure iusto labore laboriosam laborum laudantium libero magnam magni maiores maxime minima minus molestiae mollitia nam natus necessitatibus nemo neque nihil nisi nobis non nostrum nulla numquam obcaecati odio officia officiis omnis optio pariatur perferendis perspiciatis placeat porro possimus praesentium provident quae quam quasi quia quibusdam quisquam quod quos ratione recusandae reiciendis rem repellat repellendus reprehenderit repudiandae rerum saepe sapiente sequi similique sint sit soluta sunt suscipit tempora tenetur totam ullam unde vel veniam veritatis voluptas voluptate voluptatem voluptates voluptatibus voluptatum.</div>
+        </div>
+        <div class="element" data-type="code" data-id="4353455-131323-12331326">
+            <menu-toggle></menu-toggle>
+            <svg class="settings" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z"/></svg>
+            <div class="el editable code" contenteditable="true">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusantium, adipisci alias aliquid amet animi aperiam asperiores atque autem blanditiis consequatur consequuntur corporis cumque cupiditate delectus deleniti dicta dignissimos dolorum ducimus ea earum eius eligendi eos error esse est et eum eveniet excepturi exercitationem expedita explicabo facere facilis fugiat fugit harum hic id illum impedit in incidunt ipsa ipsum iste itaque iure iusto labore laboriosam laborum laudantium libero magnam magni maiores maxime minima minus molestiae mollitia nam natus necessitatibus nemo neque nihil nisi nobis non nostrum nulla numquam obcaecati odio officia officiis omnis optio pariatur perferendis perspiciatis placeat porro possimus praesentium provident quae quam quasi quia quibusdam quisquam quod quos ratione recusandae reiciendis rem repellat repellendus reprehenderit repudiandae rerum saepe sapiente sequi similique sint sit soluta sunt suscipit tempora tenetur totam ullam unde vel veniam veritatis voluptas voluptate voluptatem voluptates voluptatibus voluptatum.</div>
+        </div>
+    -->
+    </div>
+</body>
+</html>

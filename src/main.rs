@@ -4,12 +4,15 @@ use std::convert::Infallible;
 use tokio_postgres::NoTls;
 use warp::{Filter, Rejection};
 
+use crate::data::PageRequest;
+
 mod data;
 mod db;
 mod error;
 mod handler;
+mod services;
 
-type Result<T> = std::result::Result<T, Rejection>;
+pub type Result<T> = std::result::Result<T, Rejection>;
 type DBCon = Connection<PgConnectionManager<NoTls>>;
 type DBPool = Pool<PgConnectionManager<NoTls>>;
 
@@ -35,7 +38,45 @@ async fn main() {
         .and(with_db(db_pool.clone()))
         .and_then(handler::health_handler);
 
+    let page = warp::path("/api/page");
+    let page_routes = page
+        .and(warp::get())
+        .and(warp::query())
+        .and(with_db(db_pool.clone()))
+        .and_then(handler::get_page_handler)
+        .or(page
+            .and(warp::post())
+            .and(warp::body::json())
+            .and(with_db(db_pool.clone()))
+            .and_then(handler::create_page_handler));
+        // .or(page
+        //     .and(warp::put())
+        //     .and(warp::path::param())
+        //     .and(warp::body::json())
+        //     .and(with_db(db_pool.clone()))
+        //     .and_then(handler::update_todo_handler))
+        // .or(page
+        //     .and(warp::delete())
+        //     .and(warp::path::param())
+        //     .and(with_db(db_pool.clone()))
+        //     .and_then(handler::delete_todo_handler));
+
+    let page_content = warp::path("/api/page/content");
+    let page_conent_routes = page_content
+        .and(warp::get())
+        .and(warp::query())
+        .and(with_db(db_pool.clone()))
+        .and_then(handler::get_page_content_handler)
+        .or(page
+            .and(warp::post())
+            .and(warp::body::json())
+            .and(with_db(db_pool.clone()))
+            .and_then(handler::create_page_contenthandler));
+
+
+
     let routes = health_route
+        .or(page_routes)
         .with(warp::cors().allow_any_origin())
         .recover(error::handle_rejection);
 
