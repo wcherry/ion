@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <title>Project ION</title>
     <link rel="stylesheet" href="css/main.css">
-    <script src="js/main.js"></script>
+    <script type="module" src="js/main.mjs"></script>
 
 </head>
 <body>
     <div class="nav__toggle">&lt;&lt;</div>
-    <nav class="nav__left nav__open">
+    <nav class="nav__left toggle__closed">
         <ul>
             <li class="nav__link">Home</li>
             <li class="nav__link">About</li>
@@ -17,32 +17,27 @@
             <li class="nav__link">Login</li>
         </ul>
     </nav>
-    <div class="menu">
-        <ul>
-            <li class="parent__menu" data-sub-menu="menu-style-submenu">Style as...</li>
-            <ul id="menu-style-submenu" class="sub__menu toggle__closed">
-                <li class="menu__link" data-op="style" data-type="heading-1">Heading #1</li>
-                <li class="menu__link" data-op="style" data-type="heading-2">Heading #2</li>
-                <li class="menu__link" data-op="style" data-type="heading-3">Heading #3</li>
-                <li class="menu__link" data-op="style" data-type="paragraph">Paragraph</li>
-                <li class="menu__link" data-op="style" data-type="quote">Quote</li>
-                <li class="menu__link" data-op="style" data-type="code">Code</li>
-                <li class="menu__link" data-op="style" data-type="table">Table</li>
-                <li class="parent__menu" data-sub-menu="menu-list-submenu">List...</li>
-                <ul id="menu-list-submenu" class="sub__menu toggle__closed">
-                    <li class="menu__link" data-op="style" data-type="numbered_list">Numbered List</li>
-                    <li class="menu__link" data-op="style" data-type="bullet_list">Bullet List</li>
-                    <li class="menu__link" data-op="style" data-type="expando_list">Expando List</li>
-                </ul>   
-            </ul>
-            <li class="menu__link" data-op="del">Delete</li>
-            <li class="menu__link" data-op="copy">Copy</li>
-            <li class="menu__link" data-op="dup">Duplicate</li>
-            <li class="menu__link" data-op="create_page">Create page...</li>
-            <li class="menu__link" data-op="copy_block_link">Copy block link</li>
-            <li class="menu__link" data-op="create_block">Create Block (Temp)</li>
-        </ul>
-    </div>
+    <ion-floating-menu class="toggle__closed">
+        <!-- <ion-sub-menu data-sub-menu="menu-style-submenu" title="Style as..."> -->
+            <ion-menu-item data-operation="style" data-type="heading-1">Heading #1</ion-menu-item>
+            <ion-menu-item data-operation="style" data-type="heading-2">Heading #2</ion-menu-item>
+            <ion-menu-item data-operation="style" data-type="heading-3">Heading #3</ion-menu-item>
+            <ion-menu-item data-operation="style" data-type="quote">Quote</ion-menu-item>
+            <ion-menu-item data-operation="style" data-type="code">Code</ion-menu-item>
+            <ion-menu-item data-operation="style" data-type="table">Table</ion-menu-item>
+            <ion-sub-menu data-sub-menu="menu-style-submenu" title="Lists..">
+                <ion-menu-item data-operation="style" data-type="numbered_list">Numbered List</ion-menu-item>
+                <ion-menu-item data-operation="style" data-type="bullet_list">Bullet List</ion-menu-item>
+                <ion-menu-item data-operation="style" data-type="expando_list">Expando List</ion-menu-item>
+            </ion-sub-menu>
+        <!-- </ion-sub-menu> -->
+        <ion-menu-item data-operation="del">Delete</ion-menu-item>
+        <ion-menu-item data-operation="copy">Copy</ion-menu-item>
+        <ion-menu-item data-operation="dup">Duplicate</ion-menu-item>
+        <ion-menu-item data-operation="create_page">Create page...</ion-menu-item>
+        <ion-menu-item data-operation="copy_block_link">Copy block link</ion-menu-item>
+        <ion-menu-item data-operation="create_block">New block</ion-menu-item>
+    </ion-floating-menu>
     <div class="body">
     </div>
 </body>

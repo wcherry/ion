@@ -1,8 +1,4 @@
 .body {
-    /* display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center; */
     width: 100%;
     min-height: 100vh;
     left:12px;
@@ -43,7 +39,7 @@
     justify-content: center;
     align-items: center;
     bottom: 10px;
-    left: 210px;
+    left: 2px;
     width: 40px;
     height: 40px;
     margin: 0 0 0 auto;
@@ -61,7 +57,6 @@
     justify-content: flex-start;
     align-items: flex-start;
     width: 160px;
-    /* height: 20%; */
     padding: 0 1rem;
     background-color: #fff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -72,11 +67,11 @@
     left: 2px;
     transition: all 0.3s ease;
     cursor: pointer;
-    visibility: hidden;
+    visibility: visible;
 }
 
 .nav__toggle__open {
-    left: 2px;
+    left: 210px;
 }
 
 .element {
@@ -101,12 +96,28 @@
     visibility: visible;
 }
 
+.parent__menu {
+    list-style-type: none;
+}   
+
+.menu__link{
+    list-style-type: none;
+}   
+
+.menu ul {
+    padding-inline-start: 0px;
+}
+ul.sub__menu {
+    padding-inline-start: 1rem;
+}
+
 .selected__menu__link {
     font-weight: bold;
 }
 
 .toggle__closed {
     display: none;
+    visibility: hidden;
 }
 
 .menu-toggle {
@@ -136,26 +147,22 @@
 .heading-2 {
     font-size: 1.5rem;
     font-weight: 700;
-    /* margin: 0 0 1rem 0; */
 }
 
 .heading-3 {
     font-size: 1.25rem;
     font-weight: 700;
-    /* margin: 0 0 1rem 0; */
 }
 
 .paragraph {
     font-size: 1rem;
     font-weight: 400;
-    /* margin: 0 0 1rem 0; */
 }
 
 .code {
     font-size: 1rem;
     font-weight: 200;
     font-family:  SFMono-Regular, Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
-    /* margin: 0 0 1rem 0; */
     background-color: #050505;
     color: #fff;
 }
@@ -175,12 +182,6 @@
     float:right;
     top: 4px;
     right: 194px;
-    /* width: 40px;
-    height: 40px; */
-    /* background-color: #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease; */
     cursor: pointer;
     visibility: hidden;
 }
