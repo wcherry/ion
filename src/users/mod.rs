@@ -1,59 +1,63 @@
-use crate::common::{DbError, DbPool, ServiceError};
-use actix_web::{get, web, Error, HttpResponse};
-use diesel::sql_types::{Integer, Text};
-use diesel::{insert_or_ignore_into, prelude::*, sql_query, PgConnection};
 use std::collections::HashMap;
-use crate::model::Permission;
 
-fn find_all_permissions(conn: &mut PgConnection) -> Result<Vec<Permission>, DbError> {
-    let _permissions = sql_query("SELECT * FROM permissions").get_results(conn)?;
+use crate::common::{DbPool, ServiceError};
+use self::schema::User;
+use self::dto::UserDto;
+use actix_web::{get, post, web, Error, HttpResponse};
+use log::info;
+use self::service::{find_all_users, find_all_roles, find_role, find_user_with_companies, insert_user, find_all_permissions, find_all_permissions_for_role, find_permissions_for_user_and_company};
 
-    Ok(_permissions)
+mod service;
+mod schema;
+mod dto;
+
+
+#[get("/users")]
+pub async fn get_users(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
+    let all_users = web::block(move || {
+        let mut conn = pool.get()?;
+        find_all_users(&mut conn)
+    })
+    .await?
+    .map_err(|err| ServiceError::InternalServerError(err.to_string()))?;
+
+    // if all_users.len() > 0 {
+    info!("Returning {} users", all_users.len());
+    Ok(HttpResponse::Ok().json(all_users))
+    // } else {
+    //     Err("Users".to_string()).map_err(|err| ServiceError::NotFound(err))?
+    // }
 }
 
-fn find_all_permissions_for_role(
-    conn: &mut PgConnection,
-    role_id: i32,
-) -> Result<Vec<Permission>, DbError> {
-    let _permissions = sql_query("SELECT p.* FROM role_permissions rp join permissions p on rp.permission_id = p.id where rp.role_id=?")
-    .bind::<Integer, _>(role_id)
-    .get_results(conn)?;
+#[get("/user/{user_id}")]
+pub async fn get_user(
+    pool: web::Data<DbPool>,
+    path: web::Path<i32>,
+) -> Result<HttpResponse, Error> {
+    let user_id = path.into_inner();
+    let user = web::block(move || {
+        let mut conn = pool.get()?;
+        find_user_with_companies(&mut conn, user_id)
+    })
+    .await?
+    .map_err(|err| ServiceError::NotFound(err.to_string()))?;
 
-    Ok(_permissions)
+    Ok(HttpResponse::Ok().json(UserDto::from(user)))
 }
 
-fn find_permissions_for_user_and_company(
-    conn: &mut PgConnection,
-    user_id: i32,
-    company_id: i32,
-    application: String,
-) -> Result<Vec<Permission>, DbError> {
-    let _permissions = sql_query(
-        r#"select p.* 
-        from 
-          users u 
-            join user_company_permissions ucp on u.id = ucp.user_id 
-            join permissions p on p.id = ucp.permission_id and p.active = true
-        where 
-          u.id=? and u.active = true and ucp.company_id=? and p.name like ?
-        union select p.*
-        from 
-          users u 
-            join user_roles ur on u.id = ur.user_id
-            join role_permissions rp on rp.role_id = ur.role_id 
-            join permissions p on p.id = rp.permission_id and p.active = true
-        where 
-          u.id=? and u.active = true and p.name like ?
-        "#,
-    )
-    .bind::<Integer, _>(user_id)
-    .bind::<Integer, _>(company_id)
-    .bind::<Text, _>(&application)
-    .bind::<Integer, _>(user_id)
-    .bind::<Text, _>(&application)
-    .get_results(conn)?;
+#[post("/user")]
+pub async fn create_user(
+    pool: web::Data<DbPool>,
+    web::Json(body): web::Json<User>,
+) -> Result<HttpResponse, Error> {
+    web::block(move || {
+        let mut conn = pool.get()?;
+        insert_user(&mut conn, body)
+    })
+    .await?
+    .map_err(|err| ServiceError::BadRequest(err.to_string()))?;
 
-    Ok(_permissions)
+    Ok(HttpResponse::Ok().json("Saved User"))
 }
 
 #[get("/permissions")]
@@ -148,3 +152,32 @@ pub async fn get_permissions_for_roles(
 
 //     Ok(HttpResponse::Ok().json(format!("added {} new permissions", status.unwrap())))
 // }
+
+#[get("/roles")]
+pub async fn get_all_roles(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
+    let roles = web::block(move || {
+        let mut conn = pool.get()?;
+        find_all_roles(&mut conn)
+    })
+    .await?
+    .map_err(|err| ServiceError::InternalServerError(err.to_string()))?;
+
+    info!("Returning {} roles", roles.len());
+    Ok(HttpResponse::Ok().json(roles))
+}
+
+#[get("/role/{role_id}")]
+pub async fn get_role(
+    pool: web::Data<DbPool>,
+    path: web::Path<i32>,
+) -> Result<HttpResponse, Error> {
+    let role_id = path.into_inner();
+    let role = web::block(move || {
+        let mut conn = pool.get()?;
+        find_role(&mut conn, role_id)
+    })
+    .await?
+    .map_err(|err| ServiceError::InternalServerError(err.to_string()))?;
+
+    Ok(HttpResponse::Ok().json(role))
+}

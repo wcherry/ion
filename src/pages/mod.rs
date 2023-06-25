@@ -1,46 +1,10 @@
 use crate::common::{DbError, DbPool, ServiceError};
 use actix_web::{get, web, Error, HttpResponse};
 use diesel::{prelude::*, sql_query, sql_types::VarChar, PgConnection};
-use chrono::NaiveDateTime;
-use serde::{Deserialize, Serialize};
+use self::dto::PageDto;
 
-table! {
-    pages_dtos (id) {
-        id -> VarChar,
-        name -> VarChar,
-        owner_id -> Nullable<Integer>,
-        company_id -> Nullable<Integer>,
-        team_id -> Nullable<Integer>,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-        active -> Bool,
-        version -> Integer,
-        page_version_id -> VarChar
-    }
-}
-  
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,)]
-#[diesel(table_name = pages_dtos)]
-pub struct PageDto {
-    id: String, 
-	name: String,
-    owner_id: Option<i32>,
-    company_id: Option<i32>,
-    team_id: Option<i32>,
-    created_at: NaiveDateTime,
-    updated_at: NaiveDateTime,
-    active: bool,
-    version: i32,
-    page_version_id: String}
-
-pub struct PageDetails {
-    pub id: i32,
-    pub version: i32,
-    pub created_at: String,
-    pub deleted: bool,
-    pub raw_content: Option<String>,
-}
-
+mod schema;
+mod dto;
 
 fn find_page(conn: &mut PgConnection, page_id: String) -> Result<PageDto, DbError> {
     let page: PageDto = sql_query("select 
@@ -66,7 +30,7 @@ order by v.version desc limit 1;
 }
 
 #[get("/page/{page_id}")]
-pub async fn get_pages_handler(
+pub async fn get_pages(
     pool: web::Data<DbPool>,
     path: web::Path<String>,
 ) -> Result<HttpResponse, Error> {
