@@ -4,6 +4,7 @@ import {createIonBlockElement, BlockElement} from './block.mjs';
 import { NavMenuElement, NavMenuItemElement, NavSubMenuElement } from './menu.mjs';
 import { ContextElement, useContext } from './context.mjs';
 import { UserElement } from './user.mjs';
+import { AlertElement } from './alert.mjs';
 
 function styleOperation(el, data) {
     const oldType = el.attributes.type.value;
@@ -110,6 +111,7 @@ document.addEventListener("DOMContentLoaded", function() {
     customElements.define('ion-sub-menu', NavSubMenuElement);
     customElements.define('ion-contexxt', ContextElement);
     customElements.define('ion-user', UserElement);
+    customElements.define('ion-alert', AlertElement);
 
     const event = new Event("action");
     const context = new Event("context");

@@ -2,36 +2,41 @@ use crate::{shared::common::{DbError, ServiceError}, AppState};
 use actix_web::{get, web, Error, HttpResponse, post};
 use diesel::{prelude::*, sql_query, sql_types, PgConnection};
 use self::dto::{PageDto,PageCreateDto};
+use crate::auth::jwt_auth;
 
 mod schema;
 mod dto;
 
 const DEFAULT_BLOCK_TYPE: &str = "paragraph";
 
-fn find_page(conn: &mut PgConnection, page_id: String) -> Result<PageDto, DbError> {
+fn find_page(conn: &mut PgConnection, page_id: String, user_id: i32) -> Result<PageDto, DbError> {
     let page: PageDto = sql_query("select 
-	p.id::text id, 
-	p.name,
-    p.owner_id,
-    p.company_id,
-    p.team_id,
-    p.created_at,
-    p.updated_at,
-    p.active,
-    v.version,
-    v.id::text page_version_id
-from pages p 
-	join page_versions v on p.id = v.page_id 
-where p.id = uuid($1)
-order by v.version desc limit 1;
-")
-        .bind::<sql_types::VarChar, _>(page_id)
-        .get_result::<PageDto>(conn)?;
+        p.id::text id, 
+        p.name,
+        p.owner_id,
+        p.company_id,
+        p.team_id,
+        p.parent_page_id::text,
+        p.created_at,
+        p.updated_at,
+        p.active,
+        v.version,
+        v.id::text page_version_id
+    from pages p 
+        join page_versions v on p.id = v.page_id 
+    where p.id = uuid($1)
+    AND (p.owner_id = $2 OR p.id IN 
+        (SELECT page_id FROM page_permission p JOIN users u ON p.team_id = u.team_id OR p.company_id = u.company_id OR  p.allow_all = TRUE WHERE user_id = $2 OR p.allow_all = true))
+    order by v.version desc limit 1;
+    ")
+    .bind::<sql_types::VarChar, _>(page_id)
+    .bind::<sql_types::Integer, _>(user_id)
+    .get_result::<PageDto>(conn)?;
 
     Ok(page)
 }
 
-fn create_page(conn: &mut PgConnection, page: PageCreateDto) -> Result<PageDto, DbError> {
+fn create_page(conn: &mut PgConnection, page: PageCreateDto, user_id: i32) -> Result<PageDto, DbError> {
     let page_id = uuid::Uuid::new_v4();
     let page_version_id = uuid::Uuid::new_v4();
     let block_id = uuid::Uuid::new_v4();
@@ -65,19 +70,22 @@ fn create_page(conn: &mut PgConnection, page: PageCreateDto) -> Result<PageDto, 
         .bind::<sql_types::Uuid, _>(block_id)
         .execute(conn)?;
     
-    let page = find_page(conn, page_id.to_string())?;
+    let page = find_page(conn, page_id.to_string(), user_id)?;
     Ok(page)
 }
 
 #[get("/page/{page_id}")]
 pub async fn get_pages(
     app: web::Data<AppState>,
+    jwt: jwt_auth::JwtMiddleware,
     path: web::Path<String>,
 ) -> Result<HttpResponse, Error> {
+    let user_id = jwt.user_id;
+    println!("user_id: {}", user_id);
     let page_id = path.into_inner();
     let page = web::block(move || {
         let mut conn = app.pool.get()?;
-        find_page(&mut conn, page_id)
+        find_page(&mut conn, page_id, user_id)
     })
     .await?
     .map_err(|err| ServiceError::NotFound(err.to_string()))?;
@@ -88,11 +96,12 @@ pub async fn get_pages(
 #[post("/page")]
 pub async fn create_page_handler(
     app: web::Data<AppState>,
+    jwt: jwt_auth::JwtMiddleware,
     web::Json(body): web::Json<PageCreateDto>,
 ) -> Result<HttpResponse, Error> {
     let page = web::block(move || {
         let mut conn = app.pool.get()?;
-        create_page(&mut conn, body)
+        create_page(&mut conn, body, jwt.user_id)
     })
     .await?
     .map_err(|err| ServiceError::BadRequest(err.to_string()))?;

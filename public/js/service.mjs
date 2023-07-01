@@ -5,19 +5,32 @@ export async function loadPage(pageId) {
 }
 
 export async function loadUser(username, password){
-    const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-            "Content-Type": "application/json",
-            // 'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        redirect: "follow", // manual, *follow, error
-        referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-        body: JSON.stringify({username, password}),
-    });
+    let response;
+    try{
+        response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            redirect: "follow", // manual, *follow, error
+            referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            body: JSON.stringify({username, password}),
+        });
+    }catch(e){ 
+        console.log('loadUserXXX error', e);
+        throw e;
+    }
+
     const jsonData = await response.json();
-    return jsonData;
-//    return {username: "admin", password: "admin"};
+    if(jsonData && jsonData.status==="success"){
+        const result = {...jsonData, token: jsonData.token};
+        console.log('successfully loaded user', result);
+        return result;
+    } else {
+        console.log('failed to load user', jsonData);
+        throw new Error("Username or password is incorrect");
+    }
 }
 /*INPUT:
     pub block_id: Option<String>,

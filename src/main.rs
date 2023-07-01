@@ -1,3 +1,9 @@
+mod auth;
+mod blocks;
+mod pages;
+mod shared;
+mod users;
+
 #[macro_use]
 extern crate diesel;
 
@@ -20,12 +26,6 @@ pub struct AppState {
     pool: Pool<ConnectionManager<PgConnection>> ,
     config: Config,
 }
-
-mod auth;
-mod blocks;
-mod pages;
-mod shared;
-mod users;
 
 const CLIENT_PATH: &str = "./public/";
 

@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS users(
     password VARCHAR(256) NOT NULL COMMENT 'hashed password',
     role VARCHAR(64) NOT NULL,  COMMENT 'role of the user e.g. admin, user, etc.',
     profile_id INTEGER,
-    company_id INTEGER, 
+    company_id INTEGER,
+    team_id integer,
     -- metadata
     created_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
     updated_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
@@ -134,4 +135,17 @@ CREATE TABLE IF NOT EXISTS page_block_index (
     created_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
     FOREIGN KEY (page_version_id) REFERENCES page_versions (id),
     FOREIGN KEY (block_id) REFERENCES blocks (id)
- ) 
+ )
+
+CREATE TABLE page_permission (
+	id SERIAL PRIMARY KEY, 
+	page_id UUID, 
+	user_id integer, 
+	team_id integer, 
+	company_id integer, 
+	allow_all boolean,
+	created_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
+    updated_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
+    created_by INTEGER NOT NULL DEFAULT 0,
+    updated_by INTEGER NOT NULL DEFAULT 0,
+    active BOOL NOT NULL DEFAULT true);

@@ -1,14 +1,13 @@
+mod dto;
+mod schema;
+mod service;
+
 use std::collections::HashMap;
 
 use crate::shared::{common::{DbPool, ServiceError}, schema::User};
 use actix_web::{get, post, web, Error, HttpResponse};
 use log::info;
 use service::{find_all_users, find_all_roles, find_role, insert_user, find_all_permissions, find_all_permissions_for_role, find_permissions_for_user_and_company};
-
-
-mod dto;
-mod schema;
-mod service;
 
 #[get("/")]
 async fn get_users(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {

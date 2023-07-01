@@ -24,7 +24,7 @@ impl fmt::Display for ErrorResponse {
 }
 
 pub struct JwtMiddleware {
-    pub user_id: uuid::Uuid,
+    pub user_id: i32,
 }
 
 impl FromRequest for JwtMiddleware {
@@ -65,9 +65,10 @@ impl FromRequest for JwtMiddleware {
             }
         };
 
-        let user_id = uuid::Uuid::parse_str(claims.sub.as_str()).unwrap();
+        let user_id = claims.sub;
+        let user_id = user_id.parse::<i32>().unwrap();
         req.extensions_mut()
-            .insert::<uuid::Uuid>(user_id.to_owned());
+            .insert::<i32>(user_id);
 
         ready(Ok(JwtMiddleware { user_id }))
     }

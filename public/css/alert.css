@@ -1,0 +1,81 @@
+.alert { 
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    position: fixed;
+    top: calc(50% - 80px);
+    left: calc(50% - 150px);
+    width: 300px;
+    padding: 0rem;
+    background-color: #eee;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 200;
+    animation: alert 0.5s ease;
+    cursor: pointer;
+    border-color: #555;
+    border-width: 2px;
+    border-style: solid;
+}
+
+.alert[data-type="error"]  {
+    border-color: #F00;
+}
+
+.alert[data-type="warning"]  {
+    border-color: #FF0;
+    background-color: #fff;
+}
+
+.alert > .title {
+    display: flex;
+    width: 100%;
+    justify-self: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+}
+
+.alert[data-type="error"] > .title {
+    background-color: #F00;
+}
+
+.alert[data-type="warning"] > .title {
+    background-color: #FF0;
+    color: #000;
+}
+
+
+.alert > .title > span {
+    width: 100%;
+}
+
+.alert > .title > button {
+    height: 18px;
+    margin: 0 2px 2px 0;
+}
+
+.alert > .message {
+    font-size: 1rem;
+    font-weight: 400;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.alert > .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+}
+
+.buttons button {
+    width: 4rem;
+    margin: 0 12px 0 0;
+}

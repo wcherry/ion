@@ -1,14 +1,13 @@
+mod dto;
+mod schema;
+mod service;
+
 use actix_web::{get, post, put, web, Error, HttpResponse};
 use crate::AppState;
 
 use self::service::{find_blocks_by_page_version, create_block_and_attach_to_page, update_block};
 use super::shared::common::ServiceError;
 use self::dto::BlockRequest;
-
-mod service;
-mod schema;
-mod dto;
-
 
 #[get("/page-version/{page_version_id}/blocks")]
 pub async fn get_blocks(

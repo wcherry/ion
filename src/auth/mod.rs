@@ -1,5 +1,5 @@
 mod dto;
-mod jwt_auth;
+pub mod jwt_auth;
 mod service;
 
 use actix_web::{
@@ -69,12 +69,12 @@ async fn login_user_handler(
     web::Json(body): web::Json<LoginRequestDto>,
 ) -> Result<HttpResponse, Error> {
     let secret = app.config.jwt_secret.clone();
-    let user = web::block(move || {
+    let mut user = web::block(move || {
         let mut conn = app.pool.get()?;
         find_user(&mut conn, body.username)
     })
     .await?
-    .map_err(|err| ServiceError::InternalServerError(err.to_string()))?;
+    .map_err(|err| ServiceError::BadRequest(err.to_string()))?;
 
 
     let parsed_hash = PasswordHash::new(&user.password).unwrap();
@@ -110,10 +110,11 @@ async fn login_user_handler(
         .max_age(ActixWebDuration::new(60 * 60, 0))
         .http_only(true)
         .finish();
+    user.password = "".to_string();
 
     Ok(HttpResponse::Ok()
         .cookie(cookie)
-        .json(json!({"status": "success", "token": token})))
+        .json(json!({"status": "success", "token": token, "user": user})))
 }
 
 #[get("/logout")]

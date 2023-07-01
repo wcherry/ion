@@ -1,3 +1,4 @@
+import { createAlert } from "./alert.mjs";
 import { useContext } from "./context.mjs";
 import { loadUser } from "./service.mjs";
 
@@ -11,6 +12,7 @@ export class UserElement extends HTMLElement {
         const userString = localStorage.getItem('user');
         if(userString) {
             this.user = JSON.parse(userString);
+            console.log("Loaded user from cache ${this.user.name} with page ${this.user.page_version_id}");
             userContext.set('user', this.user);
         }
         this.show();
@@ -31,18 +33,22 @@ export class UserElement extends HTMLElement {
     }
     
     show(){
-        console.log('show', this.isLoggedin());
         this.innerHTML = this.isLoggedin() ? `<div>Username: ${this.user.name} <button id="logout" >Logout</button></div>` :
             `<div class="login"><div><span>Username</span><input id="username"></input></div><div><span>Password</span><input id="password"></input></div><button id="login" >Login</button></div>`;    
 
         const loginButton = document.getElementById('login');
         if(loginButton) {
             loginButton.addEventListener('click', () => {
-                console.log('loginButton click');
                 (async () => { 
-                    let user = await this.loginUser();
-                    this.user = user;
-                    this.show();})();
+                    try{
+                        let user = await this.loginUser();
+                        this.user = user;
+                        this.show();
+                    }catch(e){
+                        console.log('loginUser error', e);
+                        createAlert('error', 'Login Failed', e.message);
+                    }
+                })();
                 
             });
         }            
