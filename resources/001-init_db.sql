@@ -87,9 +87,10 @@ CREATE TABLE IF NOT EXISTS pages
 (
     id UUID PRIMARY KEY NOT NULL,
     name VARCHAR(255),
-    owner_id INTEGER NOT NULL,
+    owner_id INTEGER NOT NULL,  
     company_id INTEGER,
     team_id INTEGER,
+    parent_page_id UUID NOT NULL,
     -- metadata
     created_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
     updated_at timestamp with time zone DEFAULT (now() at time zone 'utc'),

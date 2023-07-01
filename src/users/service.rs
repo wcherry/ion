@@ -1,10 +1,11 @@
-use crate::common::DbError;
+use crate::shared::common::DbError;
 use diesel::sql_types::{Integer, VarChar};
 use diesel::{insert_into, prelude::*, sql_query, PgConnection};
 use log::info;
 
-use super::dto::{UserDto, CompanyDto};
-use super::schema::{User, Role, Permission, users, Company};
+use crate::shared::schema::{User, users};
+use super::schema::{Role, Permission};
+
 
 pub fn insert_user(conn: &mut PgConnection, user: User) -> Result<usize, DbError> {
     // FORNOW: The Mysql Rust connection doesn't support the RETURNING clause
@@ -32,29 +33,56 @@ pub fn find_all_users(conn: &mut PgConnection) -> Result<Vec<User>, DbError> {
     Ok(user)
 }
 
-pub fn find_user_with_companies(conn: &mut PgConnection, user_id: i32) -> Result<UserDto, DbError> {
-    let user = sql_query("SELECT * FROM users WHERE id=?")
-        .bind::<Integer, _>(user_id)
-        .get_result::<User>(conn)?;
-    let companies: Vec<Company> = sql_query(
-        r#"select unique c.name name, c.id, c.active 
-  from companies c 
-  join user_company_permissions ucp on c.id=ucp.company_id and ucp.user_id=?
-  union select unique c.name name, c.id, c.active 
-  from companies c 
-  join user_roles ur on c.id=ur.company_id and ur.user_id=?;
-  "#,
-    )
-    .bind::<Integer, _>(user_id)
-    .bind::<Integer, _>(user_id)
-    .get_results(conn)?;
-    return Ok(UserDto {
-        id: user.id.unwrap(), // TODO: Proper handling of this error that should never happen
-        name: user.name,
-        active: user.active,
-        companies: companies.into_iter().map(|it| CompanyDto::from(it)).collect(),
-    });
-}
+// pub fn find_user(conn: &mut PgConnection, username: String, password: String) -> Result<User, DbError> {
+//     let user = sql_query("SELECT 
+//     u.id,
+//     u.name,
+//     u.email_address,
+//     u.role,
+//     u.profile_id,
+//     p.avatar_url,
+//     p.bio,
+//     p.default_page_id::text,
+//     pv.id::text page_version_id,
+//     u.company_id,
+//     u.created_at,
+//     u.updated_at,
+//     u.created_by,
+//     u.updated_by,
+//     u.active
+// FROM users u 
+// LEFT JOIN profile p ON u.profile_id = p.id
+// LEFT JOIN page_versions pv ON p.default_page_id = pv.page_id 
+// WHERE name = $1 AND password = $2")
+//     .bind::<VarChar, _>(username)
+//     .bind::<VarChar, _>(password)
+//     .get_result::<User>(conn)?;
+//     Ok(user)
+// }
+
+// pub fn find_user_with_companies(conn: &mut PgConnection, user_id: i32) -> Result<UserDto, DbError> {
+//     let user = sql_query("SELECT * FROM users WHERE id=?")
+//         .bind::<Integer, _>(user_id)
+//         .get_result::<User>(conn)?;
+//     let companies: Vec<Company> = sql_query(
+//         r#"select unique c.name name, c.id, c.active 
+//   from companies c 
+//   join user_company_permissions ucp on c.id=ucp.company_id and ucp.user_id=?
+//   union select unique c.name name, c.id, c.active 
+//   from companies c 
+//   join user_roles ur on c.id=ur.company_id and ur.user_id=?;
+//   "#,
+//     )
+//     .bind::<Integer, _>(user_id)
+//     .bind::<Integer, _>(user_id)
+//     .get_results(conn)?;
+//     return Ok(UserDto {
+//         id: user.id, // TODO: Proper handling of this error that should never happen
+//         name: user.name,
+//         active: user.active,
+//         companies: companies.into_iter().map(|it| CompanyDto::from(it)).collect(),
+//     });
+// }
 
 pub fn find_all_permissions(conn: &mut PgConnection) -> Result<Vec<Permission>, DbError> {
     let _permissions = sql_query("SELECT * FROM permissions").get_results(conn)?;

@@ -2,6 +2,8 @@
 import {loadPage, insertBlock} from './service.mjs';
 import {createIonBlockElement, BlockElement} from './block.mjs';
 import { NavMenuElement, NavMenuItemElement, NavSubMenuElement } from './menu.mjs';
+import { ContextElement, useContext } from './context.mjs';
+import { UserElement } from './user.mjs';
 
 function styleOperation(el, data) {
     const oldType = el.attributes.type.value;
@@ -43,6 +45,13 @@ function handleMenuClick(event, blockElement) {
     elementMenu.style.top=`${blockElement.getBoundingClientRect().top}px`;
 }
 
+function handleUserChange(event) {
+    const user = event.detail.data.user;
+    console.log('User change', user);
+    //const element = document.querySelector('.user');
+  //  element.innerHTML = user;
+}
+
 document.addEventListener("action", function(event) {
     //console.log('Action event', event.detail);
     const operation = event.detail.data.operation;
@@ -63,6 +72,28 @@ document.addEventListener("action", function(event) {
     }
 });
 
+document.addEventListener("context", function(event) {
+    console.log('Context event', event.detail);
+    if(event.detail.name === 'user') {
+        handleUserChange(event);
+    }
+    if(event.detail.name === 'page') {
+        console.log('Page change', event.detail);
+        (async () => {
+            console.log('Loading blocks from page ',event.detail.data.page);
+            const blocks = await loadPage(event.detail.data.page);        //TODO: lookup pageid from user profile
+            console.log('Loaded blocks', blocks);
+            const body = document.querySelector('.body');
+            body.innerHTML = '';
+            blocks.forEach(block => {
+                const el = createIonBlockElement(block.id, block.block_type, block.content);
+                body.append(el);
+                el.setMenu(handleMenuClick);
+            });
+        })();
+    }
+});
+
 document.addEventListener("DOMContentLoaded", function() {
     class MenuToggle extends HTMLElement {
         //    Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
@@ -77,39 +108,14 @@ document.addEventListener("DOMContentLoaded", function() {
     customElements.define('ion-floating-menu', NavMenuElement);
     customElements.define('ion-menu-item', NavMenuItemElement);
     customElements.define('ion-sub-menu', NavSubMenuElement);
+    customElements.define('ion-contexxt', ContextElement);
+    customElements.define('ion-user', UserElement);
 
     const event = new Event("action");
+    const context = new Event("context");
 
     const nav = document.querySelector('.nav__left');
-    const elementMenu = document.querySelector('.menu');
     const navToggle = document.querySelector('.nav__toggle');
-    const navLinks = document.querySelectorAll('.nav__link');
-    const editable = document.querySelectorAll('.editable');
-
-    //const menuToggles = document.querySelectorAll('.menu-toggle');
-    //const elementMenuLink = document.querySelectorAll('.menu__link');
-
-    // editable.forEach(el =>{ 
-    //     el.addEventListener('blur', () => {
-    //         console.log('Saving...',el.parentElement.dataset.id);
-    //     });
-    //     el.addEventListener('mouseup', () => {
-    //         const selection = window.getSelection().toString();
-    //         if(selection) console.log('Selection changed...',el.parentElement.dataset.id, selection);
-    //     });
-    // });
-
-    // menuToggles.forEach(el => { el.addEventListener('click', (e) => {
-        //     elementMenu.classList.toggle('menu__open');
-        //     const blockElement = el.parentElement.parentElement;
-        //     elementMenu.dataset.elementId = blockElement.id
-        //     let type = blockElement.attributes.type.value;
-        //     console.log('Menu toggle', blockElement.id, type);
-        //     elementMenu.querySelectorAll(`.menu__link`).forEach(link=>{link.classList.remove('selected__menu__link')});
-        //     elementMenu.querySelector(`.menu__link[data-type="${type}"]`).classList.add('selected__menu__link');
-        //     elementMenu.style.top=`${el.getBoundingClientRect().top}px`;
-        // });
-    // });
 
     navToggle.addEventListener('click', () => {
         nav.classList.toggle('nav__open');
@@ -117,37 +123,14 @@ document.addEventListener("DOMContentLoaded", function() {
         navToggle.innerHTML = navToggle.classList.contains('toggle__closed') ? ">>" : "<<";
     });
 
-    // navLinks.forEach(link => {
-    //     link.addEventListener('click', () => {
-    //         nav.classList.remove('nav__open');
-    //     });
-    // });
-
-    // elementMenuLink.forEach(link => {link.addEventListener('click', () => {
-    //         switch(link.dataset.op) {
-    //             case 'style': styleOperation(link); break;
-    //             case 'copy_block_link': copyBlockLinkOperation(link); break;
-    //             case 'del': console.log('Delete'); break;
-    //             case 'copy': console.log('Copy'); break;
-    //             case 'dup': console.log('Duplicate'); break;
-    //             case 'create_page': console.log('Create page...'); break;
-    //             case 'create_block': createBlockOperation(link); break;
-    //             default: console.log('Unknown operation', link.dataset.op);
-    //         }
-    //         elementMenu.classList.toggle('menu__open');
-    //     });
-    // });
-
-    //Toggle sub-menus on click parent__menu" data-sub-menu="menu_style_sub-list"
-    // document.querySelectorAll('.parent__menu').forEach(el => {
-    //     el.addEventListener('click', () => {
-    //         const subMenu = document.getElementById(el.dataset.subMenu);
-    //         subMenu.classList.toggle('toggle__closed');
-    //     });
-    // });
-
     (async function() {
-        const blocks = await loadPage('ea636765-dae1-495e-bda5-a55d74284449/blocks');        //TODO: lookup pageid from user profile
+        const user = useContext("user").get("user");
+        console.log('User', user);
+        let block = 'ea636765-dae1-495e-bda5-a55d74284449';
+        if(user){
+            block = user.page_version_id;
+        }
+        const blocks = await loadPage(block);        //TODO: lookup pageid from user profile
         console.log('Loaded blocks', blocks);
         const body = document.querySelector('.body');
         blocks.forEach(block => {
@@ -155,5 +138,9 @@ document.addEventListener("DOMContentLoaded", function() {
             body.append(el);
             el.setMenu(handleMenuClick);
         });
+
+        // document.querySelectorAll('ion-block[type="code"]').forEach(el => {
+        //     hljs.highlightElement(el);
+        //   })
     })();
 });

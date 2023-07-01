@@ -130,6 +130,24 @@ ul.sub__menu {
     cursor: pointer;
 }
 
+div.login {
+    display: flex;
+    flex-direction: row;
+}
+div.login > div > span {
+    font-size: 8pt;
+    font-weight: 300;
+    color: #333;
+}
+
+div.login > div{
+    display: flex;
+    flex-direction: column;
+    width: 80px;
+    margin-right: 10px;
+}
+ 
+
 .el {
     width: 60%;
     padding: 0.5rem 1rem;

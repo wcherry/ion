@@ -1,15 +1,23 @@
-// import { createIonBlockElement } from './block.mjs';
-
 export async function loadPage(pageId) {
-    const response = await fetch(`http://localhost:8090/api/page-version/ea636765-dae1-495e-bda5-a55d74284449/blocks`);
+    const response = await fetch(`/api/page-version/${pageId}/blocks`);
     const jsonData = await response.json();
     return jsonData;
-    // let blocks = []
-    // for(var i in jsonData) {
-    //     let block = jsonData[i];
-    //     blocks.push(block);
-    // }
-    // return blocks;
+}
+
+export async function loadUser(username, password){
+    const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        redirect: "follow", // manual, *follow, error
+        referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+        body: JSON.stringify({username, password}),
+    });
+    const jsonData = await response.json();
+    return jsonData;
+//    return {username: "admin", password: "admin"};
 }
 /*INPUT:
     pub block_id: Option<String>,
@@ -31,7 +39,19 @@ export async function loadPage(pageId) {
         active: block.active,
 */
 export async function insertBlock(pageVersionId,  blockRequest) {
-    const response = await fetch(`http://localhost:8090/api/page-version/${pageVersionId}/block`, {
+    const response = await fetch(`/api/page-version/${pageVersionId}/block`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(blockRequest)
+    });
+    const jsonData = await response.json();
+    return jsonData;
+}
+
+export async function updateBlock(pageVersionId,  blockRequest) {
+    const response = await fetch(`/api/page-version/${pageVersionId}/block`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
