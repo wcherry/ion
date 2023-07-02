@@ -1,24 +1,20 @@
 use chrono::{NaiveDateTime,};
-use diesel::sql_types::Timestamp;
 use serde::{Deserialize, Serialize};
 
-// pub struct PageDetails {
-//     pub id: i32,
-//     pub version: i32,
-//     pub created_at: String,
-//     pub deleted: bool,
-//     pub raw_content: Option<String>,
-// }
-
-
-
-#[derive(Queryable)]
-pub struct PageDetails{
-    pub id: i32,
-    pub version: i32,
-    pub created_at: Timestamp,
-    pub deleted: bool,
-    pub raw_content: Option<String>,
+table! {
+    page_view (id) {
+        id -> VarChar,
+        name -> VarChar,
+        owner_id -> Nullable<Integer>,
+        company_id -> Nullable<Integer>,
+        team_id -> Nullable<Integer>,
+        parent_page_id -> Nullable<VarChar>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        active -> Bool,
+        version -> Integer,
+        page_version_id -> VarChar
+    }
 }
 
 table! {
@@ -38,6 +34,4 @@ pub struct Page {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub active: bool,
-    //pub versions: Vec<PageDetails>,
 }
-

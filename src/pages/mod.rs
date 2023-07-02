@@ -1,11 +1,11 @@
 use crate::{shared::common::{DbError, ServiceError}, AppState};
 use actix_web::{get, web, Error, HttpResponse, post};
 use diesel::{prelude::*, sql_query, sql_types, PgConnection};
-use self::dto::{PageDto,PageCreateDto};
 use crate::auth::jwt_auth;
+use self::dto::{PageCreateDto, PageDto};
 
 mod schema;
-mod dto;
+pub mod dto;
 
 const DEFAULT_BLOCK_TYPE: &str = "paragraph";
 
@@ -40,11 +40,13 @@ fn create_page(conn: &mut PgConnection, page: PageCreateDto, user_id: i32) -> Re
     let page_id = uuid::Uuid::new_v4();
     let page_version_id = uuid::Uuid::new_v4();
     let block_id = uuid::Uuid::new_v4();
+    let parent_page_id = uuid::Uuid::parse_str(&page.parent_page_id)?;
 
-    let _id = diesel::sql_query( "INSERT INTO pages (id, name, owner_id, company_id, team_id) values($1,$2,$3,$4,$5)")
+    let _id = diesel::sql_query( "INSERT INTO pages (id, parent_page_id, name, owner_id, company_id, team_id) values($1,$2,$3,$4,$5,$6)")
         .bind::<sql_types::Uuid, _>(page_id)
+        .bind::<sql_types::Uuid, _>(parent_page_id)
         .bind::<sql_types::VarChar, _>(page.name)
-        .bind::<sql_types::Integer, _>(0)
+        .bind::<sql_types::Integer, _>(user_id)
         .bind::<sql_types::Integer, _>(0)
         .bind::<sql_types::Integer, _>(0)
         .execute(conn)?;
@@ -55,7 +57,7 @@ fn create_page(conn: &mut PgConnection, page: PageCreateDto, user_id: i32) -> Re
         .bind::<sql_types::Integer, _>(1)
         .execute(conn)?;
     
-    let _id = diesel::sql_query( "INSERT INTO blocks (id, block_id, `version`, block_type, CONTENT,created_by,updated_by) values($1,uuid_generate_v4(),$2,$3,$4,$5,$6)")
+    let _id = diesel::sql_query( "INSERT INTO blocks (id, block_id, version, block_type, content,created_by,updated_by) values($1,uuid_generate_v4(),$2,$3,$4,$5,$6)")
         .bind::<sql_types::Uuid, _>(block_id)
         .bind::<sql_types::Integer, _>(1)
         .bind::<sql_types::VarChar, _>(DEFAULT_BLOCK_TYPE)
@@ -74,8 +76,17 @@ fn create_page(conn: &mut PgConnection, page: PageCreateDto, user_id: i32) -> Re
     Ok(page)
 }
 
+#[utoipa::path(
+    get,
+    path = "/page",
+    params(("page_id",description = "UUID of page to retreive",),),
+    tag = "Retrieve a page by id (UUID)",
+    responses(
+        (status = 200, description = "Successfully retreived a page", body = [PageDto])
+    )
+)]
 #[get("/page/{page_id}")]
-pub async fn get_pages(
+pub async fn get_pages_handler(
     app: web::Data<AppState>,
     jwt: jwt_auth::JwtMiddleware,
     path: web::Path<String>,
@@ -93,8 +104,17 @@ pub async fn get_pages(
     Ok(HttpResponse::Ok().json(page))
 }
 
+#[utoipa::path(
+    post,
+    path = "/page",
+    request_body = PageCreateDto,
+    tag = "Creates a new page and an empty block",
+    responses(
+        (status = 200, description = "Successfully created a new page", body = [PageDto])
+    )
+)]
 #[post("/page")]
-pub async fn create_page_handler(
+pub(super) async fn create_page_handler(
     app: web::Data<AppState>,
     jwt: jwt_auth::JwtMiddleware,
     web::Json(body): web::Json<PageCreateDto>,

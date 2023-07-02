@@ -10,7 +10,7 @@ use super::shared::common::ServiceError;
 use self::dto::BlockRequest;
 
 #[get("/page-version/{page_version_id}/blocks")]
-pub async fn get_blocks(
+async fn get_blocks(
     app: web::Data<AppState>,
     path: web::Path<String>,
 ) -> Result<HttpResponse, Error> {
@@ -27,7 +27,7 @@ pub async fn get_blocks(
 
 
 #[post("/block")]
-pub async fn create_block(
+async fn create_block(
     app: web::Data<AppState>,
     web::Json(body): web::Json<BlockRequest>,
 ) -> Result<HttpResponse, Error> {
@@ -42,7 +42,7 @@ pub async fn create_block(
 }
 
 #[put("/block/{block_id}")]
-pub async fn update_block_handler(
+async fn update_block_handler(
     app: web::Data<AppState>,
     path: web::Path<String>,
     web::Json(body): web::Json<BlockRequest>,
@@ -58,3 +58,9 @@ pub async fn update_block_handler(
     Ok(HttpResponse::Ok().json(blocks))
 }
 
+
+pub fn config(cfg: &mut web::ServiceConfig) {
+    cfg.service(get_blocks);
+    cfg.service(create_block);
+    cfg.service(update_block_handler);
+}

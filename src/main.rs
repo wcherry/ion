@@ -13,11 +13,12 @@ use diesel::{
     r2d2::{self, Pool, ConnectionManager},
     PgConnection,
 };
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+
 use std::{io, path::PathBuf};
 use actix_web::middleware::Logger;
 
-use pages::{get_pages,};
-use blocks::{get_blocks, update_block_handler as update_block, create_block};
 use shared::config::Config;
 
 use actix_cors::Cors;
@@ -54,6 +55,24 @@ async fn main() -> io::Result<()> {
     }
     env_logger::init();
 
+    #[derive(OpenApi)]
+    #[openapi(
+        paths(pages::create_page_handler, pages::get_pages_handler),
+        components(
+            schemas(pages::dto::PageCreateDto, pages::dto::PageDto),
+        ),
+        security(
+            (),
+            ("my_auth" = ["read:items", "edit:items"]),
+            ("token_jwt" = [])
+        ),
+        tags(
+            (name = "ion::api", description = "Ion API"),
+        ),
+        external_docs(url = "http://more.about.our.apis", description = "More about our APIs")
+    )]
+    struct ApiDoc; 
+
     let config = Config::init();
     
     // set up database connection pool
@@ -86,13 +105,12 @@ async fn main() -> io::Result<()> {
                 web::scope("/api")
                 .configure(auth::config)
                 .configure(users::config)
-                    .service(get_pages)
-                    .service(get_blocks)
-                    .service(create_block)
-                    .service(update_block)
-                    // .app_data(web::Data::new(pool.clone())),
+                .configure(blocks::config)
+                .service(pages::get_pages_handler)
+                .service(pages::create_page_handler)
             )
             .service(health_check)
+            .service(SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()))
             .route("/{filename:.*}", web::get().to(index))
     })
     .bind(("127.0.0.1", 8090))?

@@ -144,6 +144,7 @@ CREATE TABLE page_permission (
 	team_id integer, 
 	company_id integer, 
 	allow_all boolean,
+    mode enum('read', 'write', 'admin'),
 	created_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
     updated_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
     created_by INTEGER NOT NULL DEFAULT 0,
