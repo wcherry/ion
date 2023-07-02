@@ -11,6 +11,8 @@ use super::dto::TokenClaims;
 
 use super::AppState;
 
+const GUEST_USER_ID: i32 = 0;
+
 #[derive(Debug, Serialize)]
 struct ErrorResponse {
     status: String,
@@ -25,6 +27,7 @@ impl fmt::Display for ErrorResponse {
 
 pub struct JwtMiddleware {
     pub user_id: i32,
+    pub is_guest: bool,
 }
 
 impl FromRequest for JwtMiddleware {
@@ -43,6 +46,9 @@ impl FromRequest for JwtMiddleware {
             });
 
         if token.is_none() {
+            if req.method() == http::Method::OPTIONS || req.method() == http::Method::GET {
+                return ready(Ok(JwtMiddleware { user_id: GUEST_USER_ID, is_guest: true }));
+            }
             let json_error = ErrorResponse {
                 status: "fail".to_string(),
                 message: "You are not logged in, please provide token".to_string(),
@@ -70,6 +76,6 @@ impl FromRequest for JwtMiddleware {
         req.extensions_mut()
             .insert::<i32>(user_id);
 
-        ready(Ok(JwtMiddleware { user_id }))
+        ready(Ok(JwtMiddleware { user_id, is_guest: false }))
     }
 }
