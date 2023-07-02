@@ -1,19 +1,16 @@
+mod dto;
+mod schema;
+mod service;
+
 use std::collections::HashMap;
 
-use crate::common::{DbPool, ServiceError};
-use self::schema::User;
-use self::dto::UserDto;
+use crate::shared::{common::{DbPool, ServiceError}, schema::User};
 use actix_web::{get, post, web, Error, HttpResponse};
 use log::info;
-use self::service::{find_all_users, find_all_roles, find_role, find_user_with_companies, insert_user, find_all_permissions, find_all_permissions_for_role, find_permissions_for_user_and_company};
+use service::{find_all_users, find_all_roles, find_role, insert_user, find_all_permissions, find_all_permissions_for_role, find_permissions_for_user_and_company};
 
-mod service;
-mod schema;
-mod dto;
-
-
-#[get("/users")]
-pub async fn get_users(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
+#[get("/")]
+async fn get_users(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     let all_users = web::block(move || {
         let mut conn = pool.get()?;
         find_all_users(&mut conn)
@@ -29,24 +26,24 @@ pub async fn get_users(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     // }
 }
 
-#[get("/user/{user_id}")]
-pub async fn get_user(
-    pool: web::Data<DbPool>,
-    path: web::Path<i32>,
-) -> Result<HttpResponse, Error> {
-    let user_id = path.into_inner();
-    let user = web::block(move || {
-        let mut conn = pool.get()?;
-        find_user_with_companies(&mut conn, user_id)
-    })
-    .await?
-    .map_err(|err| ServiceError::NotFound(err.to_string()))?;
+// #[get("/user/{user_id}")]
+// pub async fn get_user(
+//     pool: web::Data<DbPool>,
+//     path: web::Path<i32>,
+// ) -> Result<HttpResponse, Error> {
+//     let user_id = path.into_inner();
+//     let user = web::block(move || {
+//         let mut conn = pool.get()?;
+//         find_user_with_companies(&mut conn, user_id)
+//     })
+//     .await?
+//     .map_err(|err| ServiceError::NotFound(err.to_string()))?;
 
-    Ok(HttpResponse::Ok().json(UserDto::from(user)))
-}
+//     Ok(HttpResponse::Ok().json(UserDto::from(user)))
+// }
 
-#[post("/user")]
-pub async fn create_user(
+#[post("/")]
+async fn create_user(
     pool: web::Data<DbPool>,
     web::Json(body): web::Json<User>,
 ) -> Result<HttpResponse, Error> {
@@ -61,7 +58,7 @@ pub async fn create_user(
 }
 
 #[get("/permissions")]
-pub async fn get_permissions(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
+async fn get_permissions(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     let permissions = web::block(move || {
         let mut conn = pool.get()?;
         find_all_permissions(&mut conn)
@@ -72,8 +69,8 @@ pub async fn get_permissions(pool: web::Data<DbPool>) -> Result<HttpResponse, Er
     Ok(HttpResponse::Ok().json(permissions))
 }
 
-#[get("/user/{user_id}/company/{company_id}/permissions")]
-pub async fn get_permissions_for_user_and_company(
+#[get("/{user_id}/company/{company_id}/permissions")]
+async fn get_permissions_for_user_and_company(
     pool: web::Data<DbPool>,
     path: web::Path<(i32, i32)>,
     web::Query(query): web::Query<HashMap<String, String>>,
@@ -110,7 +107,7 @@ pub async fn get_permissions_for_user_and_company(
 }
 
 #[get("/role/{role_id}/permissions")]
-pub async fn get_permissions_for_roles(
+async fn get_permissions_for_roles(
     pool: web::Data<DbPool>,
     path: web::Path<i32>,
     web::Query(_query): web::Query<HashMap<String, String>>,
@@ -154,7 +151,7 @@ pub async fn get_permissions_for_roles(
 // }
 
 #[get("/roles")]
-pub async fn get_all_roles(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
+async fn get_all_roles(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     let roles = web::block(move || {
         let mut conn = pool.get()?;
         find_all_roles(&mut conn)
@@ -167,7 +164,7 @@ pub async fn get_all_roles(pool: web::Data<DbPool>) -> Result<HttpResponse, Erro
 }
 
 #[get("/role/{role_id}")]
-pub async fn get_role(
+async fn get_role(
     pool: web::Data<DbPool>,
     path: web::Path<i32>,
 ) -> Result<HttpResponse, Error> {
@@ -180,4 +177,32 @@ pub async fn get_role(
     .map_err(|err| ServiceError::InternalServerError(err.to_string()))?;
 
     Ok(HttpResponse::Ok().json(role))
+}
+
+// #[post("/login")]
+// pub async fn login_user_handler(
+//     pool: web::Data<DbPool>,
+//     web::Json(body): web::Json<LoginRequestDto>,
+// ) -> Result<HttpResponse, Error> {
+//     let user = web::block(move || {
+//         let mut conn = pool.get()?;
+//         find_user(&mut conn, body.username.clone(), body.password.clone())
+//     })
+//     .await?
+//     .map_err(|err| ServiceError::InternalServerError(err.to_string()))?;
+
+//     Ok(HttpResponse::Ok().json(user))
+// }
+
+pub fn config(conf: &mut web::ServiceConfig) {
+    let scope = web::scope("/user")
+    .service(get_all_roles)
+    .service(get_permissions)
+    .service(get_permissions_for_roles)
+    .service(get_permissions_for_user_and_company)
+    .service(get_role)
+    // .service(get_user)
+    .service(get_users)
+        ;
+    conf.service(scope);
 }

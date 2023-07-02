@@ -32,4 +32,6 @@ To build Ion from source code the following prerequisites should be met:
 ## References
 * [Create an async CRUD web service in Rust with warp](https://blog.logrocket.com/async-crud-web-service-rust-warp/)
 * [Packaging a Rust web service using Docker](https://blog.logrocket.com/packaging-a-rust-web-service-using-docker/)
-
+* [Rust – JWT Authentication with Actix Web](https://codevoweb.com/rust-jwt-authentication-with-actix-web/)
+* [Crate actix_jwt_auth_middleware](https://docs.rs/actix-jwt-auth-middleware/latest/actix_jwt_auth_middleware/)
+* [Highlight.js](https://highlightjs.org/usage/)

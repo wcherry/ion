@@ -1,4 +1,4 @@
-use crate::common::DbError;
+use crate::shared::common::DbError;
 use diesel::{prelude::*, sql_query, sql_types::*, PgConnection};
 use super::schema::{Block, blocks, PageBlockIndex, page_block_index};
 use super::dto::{BlockDto, BlockRequest};
@@ -27,8 +27,8 @@ fn create_block(conn: &mut PgConnection, block_req: BlockRequest) -> Result<Bloc
     let uuid = uuid::Uuid::new_v4();
     
     let block = Block {
-        id: uuid.clone(),
-        block_id: if let Some(v) = block_req.block_id { uuid::Uuid::parse_str(&v)? } else { uuid.clone() },
+        id: uuid,
+        block_id: if let Some(v) = block_req.block_id { uuid::Uuid::parse_str(&v)? } else { uuid },
         version: if let Some(v) = block_req.version { v } else { 1 },
         block_type: block_req.block_type,
         content: block_req.content,
@@ -78,7 +78,7 @@ pub fn update_block(conn: &mut PgConnection, id: String, block_req: BlockRequest
     };
 
     diesel::update(blocks::table).set(block).execute(conn)?;
-    get_block(conn, id.clone())
+    get_block(conn, id)
 }
 
 
@@ -94,9 +94,9 @@ pub fn create_block_and_attach_to_page(conn: &mut PgConnection, block_req: Block
 
         let page_block_index = PageBlockIndex {
             id: uuid::Uuid::new_v4(),
-            page_version_id: page_version_id,
-            block_id: block_id,
-            display_order: display_order,
+            page_version_id,
+            block_id,
+            display_order,
             created_at: chrono::Utc::now().naive_utc(),
         };
 

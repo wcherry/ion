@@ -24,21 +24,7 @@ pub struct RolePermission {
     pub permission_id: i32,
 }
 
-table! {
-    users (id) {
-        id -> Nullable<Integer>,
-        name -> Text,
-        active -> Bool,
-    }
-  }
   
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,)]
-pub struct User {
-    pub id: Option<i32>,
-    pub name: String,
-    pub active: bool,
-}
-
 table! {
     companys (id) {
       id -> Integer,
