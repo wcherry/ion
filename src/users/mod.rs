@@ -18,29 +18,10 @@ async fn get_users(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     .await?
     .map_err(|err| ServiceError::InternalServerError(err.to_string()))?;
 
-    // if all_users.len() > 0 {
     info!("Returning {} users", all_users.len());
     Ok(HttpResponse::Ok().json(all_users))
-    // } else {
-    //     Err("Users".to_string()).map_err(|err| ServiceError::NotFound(err))?
-    // }
 }
 
-// #[get("/user/{user_id}")]
-// pub async fn get_user(
-//     pool: web::Data<DbPool>,
-//     path: web::Path<i32>,
-// ) -> Result<HttpResponse, Error> {
-//     let user_id = path.into_inner();
-//     let user = web::block(move || {
-//         let mut conn = pool.get()?;
-//         find_user_with_companies(&mut conn, user_id)
-//     })
-//     .await?
-//     .map_err(|err| ServiceError::NotFound(err.to_string()))?;
-
-//     Ok(HttpResponse::Ok().json(UserDto::from(user)))
-// }
 
 #[post("/")]
 async fn create_user(

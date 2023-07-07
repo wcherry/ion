@@ -5,7 +5,7 @@ use chrono::NaiveDateTime;
 #[derive(Debug, Serialize, QueryableByName, ToSchema)]
 #[diesel(table_name = super::schema::page_view)]
 pub struct PageDto {
-    id: String,
+    pub id: String,
     #[schema(example = "My Page")] 
 	name: String,
     #[serde(rename = "ownerId")]
@@ -24,6 +24,7 @@ pub struct PageDto {
 
 #[derive(Debug,Deserialize,ToSchema)]
 pub struct PageCreateDto {
+    pub page_id: Option<uuid::Uuid>,
     #[schema(example = "My New Page")]
     pub name: String,
     #[serde(rename = "parentPageId")]
@@ -31,4 +32,23 @@ pub struct PageCreateDto {
     pub parent_page_id: String,
     #[schema(example = "The content of the first block on the page")]
     pub content: Option<String>
+}
+
+#[derive(Debug,Deserialize,ToSchema)]
+pub struct PagePermissionCreateDto {
+    pub page_id: String,
+    pub user_id: Option<i32>,
+    pub team_id: Option<i32>,
+    pub company_id: Option<i32>,
+    pub allow_all: bool,
+    pub active: bool,
+    pub mode: String
+}
+
+
+#[derive(Debug,Deserialize,ToSchema)]
+pub struct PageTreeDto {
+    id: String,
+    name: String,
+    children: Vec<PageTreeDto>
 }

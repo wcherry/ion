@@ -4,6 +4,8 @@ mod pages;
 mod shared;
 mod users;
 
+mod swagger;
+
 #[macro_use]
 extern crate diesel;
 
@@ -13,8 +15,9 @@ use diesel::{
     r2d2::{self, Pool, ConnectionManager},
     PgConnection,
 };
-use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
+use utoipa::OpenApi;
+
 
 use std::{io, path::PathBuf};
 use actix_web::middleware::Logger;
@@ -55,24 +58,6 @@ async fn main() -> io::Result<()> {
     }
     env_logger::init();
 
-    #[derive(OpenApi)]
-    #[openapi(
-        paths(pages::create_page_handler, pages::get_pages_handler),
-        components(
-            schemas(pages::dto::PageCreateDto, pages::dto::PageDto),
-        ),
-        security(
-            (),
-            ("my_auth" = ["read:items", "edit:items"]),
-            ("token_jwt" = [])
-        ),
-        tags(
-            (name = "ion::api", description = "Ion API"),
-        ),
-        external_docs(url = "http://more.about.our.apis", description = "More about our APIs")
-    )]
-    struct ApiDoc; 
-
     let config = Config::init();
     
     // set up database connection pool
@@ -106,11 +91,10 @@ async fn main() -> io::Result<()> {
                 .configure(auth::config)
                 .configure(users::config)
                 .configure(blocks::config)
-                .service(pages::get_pages_handler)
-                .service(pages::create_page_handler)
+                .configure(pages::config)
             )
             .service(health_check)
-            .service(SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()))
+            .service(SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", swagger::ApiDoc::openapi()))
             .route("/{filename:.*}", web::get().to(index))
     })
     .bind(("127.0.0.1", 8090))?

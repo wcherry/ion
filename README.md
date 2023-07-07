@@ -28,6 +28,7 @@ To build Ion from source code the following prerequisites should be met:
 * Backend written in Rust using the Warp Web Framework
 * Frontend written in Javascript augmented with WebAssembly (Also written in Rust)
 * Datastore using PostgresSQL leveraging Redis for added performance
+* utoipa for OpenAPI/Swagger API documentation
 
 ## References
 * [Create an async CRUD web service in Rust with warp](https://blog.logrocket.com/async-crud-web-service-rust-warp/)
@@ -35,3 +36,4 @@ To build Ion from source code the following prerequisites should be met:
 * [Rust – JWT Authentication with Actix Web](https://codevoweb.com/rust-jwt-authentication-with-actix-web/)
 * [Crate actix_jwt_auth_middleware](https://docs.rs/actix-jwt-auth-middleware/latest/actix_jwt_auth_middleware/)
 * [Highlight.js](https://highlightjs.org/usage/)
+* [Crate utoipa](https://docs.rs/utoipa/latest/utoipa/)

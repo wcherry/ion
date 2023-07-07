@@ -1,17 +1,11 @@
 -- Description: This file contains the SQL statements for creating the database schema.
--- Order of operations
--- To create a user: profile -> user [-> company [-> team -> team_user_index]]
--- To create a block: page -> page_version -> block -> page_block_index
--- Example queries:
--- Get the most recent version of a page
---  SELECT 
---      v.id,
---        p.name VARCHAR(255),
-    owner_id INTEGER NOT NULL,
-    company_id INTEGER,
-    team_id INTEGER,        * FROM page_versions v JOIN pages p ON p.id = v.page_id WHERE p.id = $1 ORDER BY version DESC LIMIT 1;
--- Get all blocks for a page version
---  SELECT * FROM page_block_index WHERE page_id = $1 ORDER BY display_order ASC;
+
+-- Extensions 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Types
+CREATE TYPE page_modes AS ENUM ('read', 'write', 'admin');
+    
 
 --
 -- Security and Authentication Section
@@ -20,8 +14,8 @@ CREATE TABLE IF NOT EXISTS users(
     id SERIAL PRIMARY KEY,
     name VARCHAR(256) NOT NULL UNIQUE,
     email_address VARCHAR(256) NOT NULL UNIQUE,
-    password VARCHAR(256) NOT NULL COMMENT 'hashed password',
-    role VARCHAR(64) NOT NULL,  COMMENT 'role of the user e.g. admin, user, etc.',
+    password VARCHAR(256) NOT NULL, --  COMMENT 'hashed password'
+    role VARCHAR(64) NOT NULL, --  COMMENT 'role of the user e.g. admin, user, etc.'
     profile_id INTEGER,
     company_id INTEGER,
     team_id integer,
@@ -33,7 +27,7 @@ CREATE TABLE IF NOT EXISTS users(
     active BOOL NOT NULL DEFAULT true);
 
 CREATE TABLE IF NOT EXISTS companies(
-    id SERIAL PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(256) NOT NULL UNIQUE,
     owner_id INTEGER NOT NULL,
     profile_id INTEGER,
@@ -45,7 +39,7 @@ CREATE TABLE IF NOT EXISTS companies(
     active BOOL NOT NULL DEFAULT true);
 
 CREATE TABLE IF NOT EXISTS teams(
-    id SERIAL PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(256) NOT NULL UNIQUE,
     company_id INTEGER NOT NULL,
     owner_id INTEGER NOT NULL,
@@ -58,7 +52,7 @@ CREATE TABLE IF NOT EXISTS teams(
     active BOOL NOT NULL DEFAULT true);
 
 CREATE TABLE IF NOT EXISTS teams_user_index (
-    id SERIAL PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     team_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     -- metadata
@@ -67,10 +61,10 @@ CREATE TABLE IF NOT EXISTS teams_user_index (
     created_by INTEGER NOT NULL DEFAULT 0,
     updated_by INTEGER NOT NULL DEFAULT 0,
     active BOOL NOT NULL DEFAULT true
-)
+);
 
-CREATE TABLE IF NOT EXISTS profile(
-    id SERIAL PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS profile (
+    id SERIAL PRIMARY KEY,
     avatar_url VARCHAR(256),
     bio text,
     default_page_id UUID,
@@ -84,8 +78,7 @@ CREATE TABLE IF NOT EXISTS profile(
 --
 -- Pages and Block Section
 --
-CREATE TABLE IF NOT EXISTS pages
-(
+CREATE TABLE IF NOT EXISTS pages (
     id UUID PRIMARY KEY NOT NULL,
     name VARCHAR(255),
     owner_id INTEGER NOT NULL,  
@@ -99,8 +92,7 @@ CREATE TABLE IF NOT EXISTS pages
     updated_by INTEGER NOT NULL DEFAULT 0,
     active BOOL NOT NULL DEFAULT true);
 
-CREATE TABLE IF NOT EXISTS page_versions
-(
+CREATE TABLE IF NOT EXISTS page_versions (
     id UUID PRIMARY KEY NOT NULL,
     page_id UUID NOT NULL,
     version integer NOT NULL,
@@ -135,16 +127,16 @@ CREATE TABLE IF NOT EXISTS page_block_index (
     created_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
     FOREIGN KEY (page_version_id) REFERENCES page_versions (id),
     FOREIGN KEY (block_id) REFERENCES blocks (id)
- )
+ );
 
-CREATE TABLE page_permission (
+CREATE TABLE IF NOT EXISTS page_permission (
 	id SERIAL PRIMARY KEY, 
 	page_id UUID, 
 	user_id integer, 
 	team_id integer, 
 	company_id integer, 
 	allow_all boolean,
-    mode enum('read', 'write', 'admin'),
+    mode page_modes default 'read',
 	created_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
     updated_at timestamp with time zone DEFAULT (now() at time zone 'utc'),
     created_by INTEGER NOT NULL DEFAULT 0,
