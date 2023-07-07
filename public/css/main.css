@@ -79,6 +79,18 @@
     left: 210px;
 }
 
+#login {
+    max-height: 1.5rem;
+    margin-top: 12px;   /* TODO: Fix alignment */
+}
+.register {
+    color: #888;
+    letter-spacing: .1rem;
+    font-size: 0.8rem;
+    /*text-align: center;*/
+    cursor: pointer;
+}
+
 .element {
     padding-left: 1rem;
     background-color: #fff;

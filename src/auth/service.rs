@@ -1,13 +1,21 @@
+use crate::pages::dto::PageCreateDto;
 use crate::shared::common::DbError;
-use diesel::sql_types::VarChar;
+use diesel::sql_types::{VarChar, Integer, Uuid};
 use diesel::{prelude::*, sql_query, PgConnection};
 // use log::info;
 
-use crate::shared::schema::User;
+use crate::shared::schema::{User, Profile, UserProfile};
+use crate::pages::service::create_page;
 // use schema::{Role, Permission, Company};
 
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
 
-pub fn find_user(conn: &mut PgConnection, username: String) -> Result<User, DbError> {
+
+
+pub fn find_user(conn: &mut PgConnection, username: String) -> Result<UserProfile, DbError> {
     let user = sql_query("SELECT 
     u.id,
     u.name,
@@ -30,7 +38,7 @@ LEFT JOIN profile p ON u.profile_id = p.id
 LEFT JOIN page_versions pv ON p.default_page_id = pv.page_id 
 WHERE name = $1")
     .bind::<VarChar, _>(username)
-    .get_result::<User>(conn)?;
+    .get_result::<UserProfile>(conn)?;
     Ok(user)
 }
 
@@ -43,13 +51,39 @@ pub fn is_exists(conn: &mut PgConnection, username: String) -> Result<bool, DbEr
 
     Ok(exists == 1)
 }
-//body.name.to_owned(), body.email.to_owned(), hashed_password
-pub fn create_user(conn: &mut PgConnection, username: String, email: String, hashed_password: String) -> Result<User, DbError> {
+
+pub fn create_user(conn: &mut PgConnection, username: String, email: String, password: String) -> Result<User, DbError> {
+    let salt = SaltString::generate(&mut OsRng);
+    let hashed_password = Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .expect("Error while hashing password")
+        .to_string();
+    let page_id = uuid::Uuid::new_v4();;
     
-    let user = sql_query( "INSERT INTO users (name,email_address,password,role) VALUES ($1, $2, $3,'admin') RETURNING *")
-    .bind::<VarChar, _>(username)
-    .bind::<VarChar, _>(email)
-    .bind::<VarChar, _>(hashed_password)
-    .get_result::<User>(conn)?;
+    // Create profile object
+    // let _profile = sql_query( "INSERT INTO profile (default_page_id) VALUES (uuid($1)) RETURNING *")
+    //     .bind::<VarChar, _>(&page_id)
+    //     .get_result::<Profile>(conn)?;
+    let profile = sql_query( "INSERT INTO profile (default_page_id) VALUES (uuid($1)) RETURNING *")
+        .bind::<Uuid, _>(&page_id)
+        .get_result::<Profile>(conn)?;
+
+    // Create user object
+    let user = sql_query( "INSERT INTO users (name,email_address,password,role,profile_id) VALUES ($1, $2, $3,'admin', $4) RETURNING *")
+        .bind::<VarChar, _>(&username)
+        .bind::<VarChar, _>(email)
+        .bind::<VarChar, _>(hashed_password)
+        .bind::<Integer, _>(&profile.id)
+        .get_result::<User>(conn)?;
+
+    // Create page object
+    let page: PageCreateDto = PageCreateDto {
+        page_id: Some(page_id),
+        name: format!("{username} Home"),
+        parent_page_id: uuid::Uuid::new_v4().to_string(),
+        content: Some("".to_string()),
+    };
+    let _page = create_page(conn, page, user.id)?;
+
     Ok(user)
 }

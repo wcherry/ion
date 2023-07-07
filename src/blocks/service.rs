@@ -3,10 +3,10 @@ use diesel::{prelude::*, sql_query, sql_types::*, PgConnection};
 use super::schema::{Block, blocks, PageBlockIndex, page_block_index};
 use super::dto::{BlockDto, BlockRequest};
 
-pub fn get_block(conn: &mut PgConnection, id: String) -> Result<BlockDto, DbError> {
-    let block: BlockDto = sql_query("select 
-        b.id::text,
-        b.block_id::text,
+pub fn get_block(conn: &mut PgConnection, id: String) -> Result<Block, DbError> {
+    let block = sql_query("select 
+        b.id,
+        b.block_id,
         b.version,
         b.block_type,
         b.content,
@@ -16,9 +16,9 @@ pub fn get_block(conn: &mut PgConnection, id: String) -> Result<BlockDto, DbErro
         b.updated_by,
         b.active
     from blocks b
-    where b.id = uuid($1)")
+    where b.block_id = uuid($1) order by b.version desc limit 1")
     .bind::<VarChar, _>(id)
-    .get_result::<BlockDto>(conn)?;
+    .get_result::<Block>(conn)?;
 
     Ok(block)
 }
@@ -55,13 +55,14 @@ fn create_block(conn: &mut PgConnection, block_req: BlockRequest) -> Result<Bloc
         created_by: block.created_by,
         updated_by: block.updated_by,
         active: block.active,
+        modes: "owner".to_string(),
     };
 
     Ok(block_dto)
 }
 
 
-pub fn update_block(conn: &mut PgConnection, id: String, block_req: BlockRequest) -> Result<BlockDto, DbError> {
+pub fn update_block(conn: &mut PgConnection, id: String, block_req: BlockRequest) -> Result<Block, DbError> {
     let uuid = uuid::Uuid::parse_str(&id)?;
     let block = get_block(conn, id.clone())?;
     let block = Block {
@@ -110,31 +111,71 @@ pub fn create_block_and_attach_to_page(conn: &mut PgConnection, block_req: Block
     Ok(block_dto)
 }
 
-pub fn find_blocks_by_page_version(conn: &mut PgConnection, page_version_id: String) -> Result<Vec<BlockDto>, DbError> {
+pub fn find_blocks_by_page_version(conn: &mut PgConnection, page_version_id: String, user_id: i32) -> Result<Vec<BlockDto>, DbError> {
     let blocks: Vec<BlockDto> = sql_query("select 
-        b.id::text,
-        b.block_id::text,
-        b.version,
-        i.display_order,
-        b.block_type,
-        b.content,
-        b.created_at,
-        b.updated_at,
-        b.created_by,
-        b.updated_by,
-        b.active
-    from blocks b
-    join page_block_index i on b.id = i.block_id
-    where i.page_version_id = uuid($1)
-    order by i.display_order asc
+    b.id::text,
+    b.block_id::text,
+    b.version,
+    i.display_order,
+    b.block_type,
+    b.content,
+    b.created_at,
+    b.updated_at,
+    b.created_by,
+    b.updated_by,
+    b.active,
+    v.id,
+    p.id page_id,
+    CASE WHEN p.owner_id = $2 THEN 'owner' ELSE string_agg(DISTINCT r.MODE::text,',') END modes
+from blocks b
+join page_block_index i on b.id = i.block_id
+JOIN page_versions v ON i.page_version_id = v.id
+JOIN pages p ON v.page_id = p.id
+LEFT JOIN page_permission r ON v.page_id = r.page_id
+LEFT JOIN users u ON p.team_id = u.team_id OR p.company_id = u.company_id OR r.allow_all = TRUE
+where i.page_version_id = uuid($1) AND (p.owner_id = $2 OR r.allow_all = TRUE OR r.user_id = $2)
+GROUP BY b.id, i.display_order, v.id,p.owner_id,p.id 
+order by i.display_order asc
     ")
         .bind::<VarChar, _>(page_version_id)
+        .bind::<Integer, _>(user_id)
         .get_results::<BlockDto>(conn)?;
 
     Ok(blocks)
 }
 
+pub fn find_blocks_by_page(conn: &mut PgConnection, page_id: String, user_id: i32) -> Result<Vec<BlockDto>, DbError> {
+    let blocks: Vec<BlockDto> = sql_query("select 
+    b.id::text,
+    b.block_id::text,
+    b.version,
+    i.display_order,
+    b.block_type,
+    b.content,
+    b.created_at,
+    b.updated_at,
+    b.created_by,
+    b.updated_by,
+    b.active,
+    v.id,
+    p.id page_id,
+    CASE WHEN p.owner_id = $2 THEN 'owner' ELSE string_agg(DISTINCT r.MODE::text,',') END modes
+from blocks b
+join page_block_index i on b.id = i.block_id
+JOIN (SELECT v.* FROM page_versions v WHERE page_id = uuid($1) ORDER BY v.VERSION LIMIT 1) v ON i.page_version_id = v.id
+JOIN pages p ON v.page_id = p.id
+LEFT JOIN page_permission r ON v.page_id = r.page_id
+LEFT JOIN users u ON p.team_id = u.team_id OR p.company_id = u.company_id OR r.allow_all = TRUE
+where v.page_id = uuid($1) AND (p.owner_id = $2 OR r.allow_all = TRUE OR r.user_id = $2)
+GROUP BY b.id, i.display_order, v.id,p.owner_id,p.id 
+order by i.display_order asc
+    ")
+        .bind::<VarChar, _>(page_id)
+        .bind::<Integer, _>(user_id)
+        .get_results::<BlockDto>(conn)?;
 
+    Ok(blocks)
+}
 
 fn shift_blocks(conn: &mut PgConnection, page_version_id: uuid::Uuid, display_order: i32) -> Result<(), DbError> {
     diesel::sql_query("update page_block_index set display_order = display_order + 1 where page_version_id = uuid($1) and display_order >= $2") 

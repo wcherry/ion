@@ -23,7 +23,6 @@ export class NavMenuElement extends HTMLElement {
 export class NavMenuItemElement extends HTMLElement {
     handleClick(e) {
         const element = this.parentElement;
-        //console.log('NavMenuItemElement handleClick', element);
         element.handleItemClick(e, this.id, this.dataset);
         e.stopPropagation();
         e.preventDefault();
@@ -35,7 +34,6 @@ export class NavMenuItemElement extends HTMLElement {
         const id = this.id;
         const body = self.innerHTML;
         const title = this.attributes.title ? this.attributes.title.value : body;
-        //console.log('NavMenuItemElement connectedCallback',title);
         const type = this.attributes.type ? this.attributes.type.value : 'link';
         const op = this.dataset.operation.value
         const li = document.createElement('li');
@@ -60,13 +58,11 @@ export class NavSubMenuElement extends HTMLElement {
         self.innerHTML = `<li class="parent__menu" data-sub-menu="menu-style-submenu">${title}</li>
         <ul id="${id}-submenu" class="sub__menu toggle__closed">${body}</ul>`;
         this.addEventListener('click', (e) => {
-            //console.log('NavSubMenuElement handleClick', e, id);
             document.getElementById(`${id}-submenu`).classList.toggle('toggle__closed'); e.stopPropagation(); e.preventDefault();});    
     }
 
     handleItemClick(e, id, dataset) {
         const element = this.parentElement;
-        //console.log('NavSubMenuElement handleItemClick', id, dataset, element);
         element.handleItemClick(e, id, dataset);
         e.stopPropagation();
         e.preventDefault();

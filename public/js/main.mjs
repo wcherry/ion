@@ -1,18 +1,17 @@
 
-import {loadPage, insertBlock} from './service.mjs';
+import {loadPage, saveBlock, loadBlocks} from './service.mjs';
 import {createIonBlockElement, BlockElement} from './block.mjs';
 import { NavMenuElement, NavMenuItemElement, NavSubMenuElement } from './menu.mjs';
 import { ContextElement, useContext } from './context.mjs';
 import { UserElement } from './user.mjs';
-import { AlertElement } from './alert.mjs';
+import { ModalElement } from './modal.mjs';
+
+const DEFAULT_PAGE_ID = '66dd25a9-01ca-47ee-a558-31346e25ab8d';
 
 function styleOperation(el, data) {
     const oldType = el.attributes.type.value;
-    // console.log('styleOperation', el, data);
     const newType = data.type;
     const id = el.id;
-
-    console.log(`Changing ${id} from ${oldType} to ${newType}`);
     el.setAttribute('type', newType);
 }
 
@@ -24,20 +23,18 @@ function copyBlockLinkOperation(el) {
 }
 
 async function createBlockOperation(el) {
-    console.log('createBlockOperation', el);
+    const {pageVersionId} = useContext("page").get("page");
     const id = el.id;
     const parentElement = el.parentElement;
     const lastType = el.attributes.type.value;
     const index = [...document.querySelector(".body").children].indexOf(el);
-    console.log(`Creating new block after ${id} of type ${lastType} at index ${index}`)
-    let result = await insertBlock('ea636765-dae1-495e-bda5-a55d74284449', {block_type: lastType, content: 'Sample text #2', display_order: index+2});
+    let result = await saveBlock({pageVersionId, block_type: lastType, content: 'Sample text #2', display_order: index+2});
     let newBlockElement = createIonBlockElement(result.id, result.block_type, result.content);
     el.after(newBlockElement);
     newBlockElement.setMenu(handleMenuClick);
 }
 
 function handleMenuClick(event, blockElement) {
-    //console.log('Menu click', event, blockElement);
     const elementMenu = document.querySelector('.menu');
     elementMenu.classList.toggle('toggle__closed');
     elementMenu.dataset.blockId = blockElement.id;
@@ -48,51 +45,58 @@ function handleMenuClick(event, blockElement) {
 
 function handleUserChange(event) {
     const user = event.detail.data.user;
-    console.log('User change', user);
-    //const element = document.querySelector('.user');
-  //  element.innerHTML = user;
+    console.info('USER CHANGED', user);
+    if(user){
+        displayPage(user.default_page_id || DEFAULT_PAGE_ID);
+    } else {
+        displayPage(DEFAULT_PAGE_ID);
+    }
+}
+
+async function displayPage(pageId) {
+    const page = await loadPage(pageId);
+    useContext("page").set("page", page);
+
+    const blocks = await loadBlocks(pageId);
+    const body = document.querySelector('.body');
+    body.innerHTML = '';
+    blocks.forEach(block => {
+        const writable = block.modes.indexOf('owner')>=0 || block.modes.indexOf('admin')>=0 || block.modes.indexOf('write')>=0;
+        block.writable = writable;
+        block.pageVersionId = page.pageVersionId;
+        const el = createIonBlockElement(block);
+        body.append(el);
+        el.setMenu(handleMenuClick);
+    });
 }
 
 document.addEventListener("action", function(event) {
-    //console.log('Action event', event.detail);
     const operation = event.detail.data.operation;
     
     const elementMenu = document.querySelector('.menu');
     const blockId = elementMenu.dataset.blockId;
     const block = document.getElementById(blockId);
-    //console.log('Action event', event.detail, blockId, block);
     switch(operation) {
         case 'style': styleOperation(block, event.detail.data); break;
         case 'copy_block_link': copyBlockLinkOperation(block); break;
-        case 'del': console.log('Delete'); break;
-        case 'copy': console.log('Copy'); break;
-        case 'dup': console.log('Duplicate'); break;
-        case 'create_page': console.log('Create page...'); break;
+        case 'del': console.debug('Delete'); break;
+        case 'copy': console.debug('Copy'); break;
+        case 'dup': console.debug('Duplicate'); break;
+        case 'create_page': console.debug('Create page...'); break;
         case 'create_block': createBlockOperation(block); break;
-        default: console.log('Unknown operation', operation);
+        default: console.error('Unknown operation', operation);
     }
 });
 
 document.addEventListener("context", function(event) {
-    console.log('Context event', event.detail);
     if(event.detail.name === 'user') {
         handleUserChange(event);
     }
-    if(event.detail.name === 'page') {
-        console.log('Page change', event.detail);
-        (async () => {
-            console.log('Loading blocks from page ',event.detail.data.page);
-            const blocks = await loadPage(event.detail.data.page);        //TODO: lookup pageid from user profile
-            console.log('Loaded blocks', blocks);
-            const body = document.querySelector('.body');
-            body.innerHTML = '';
-            blocks.forEach(block => {
-                const el = createIonBlockElement(block.id, block.block_type, block.content);
-                body.append(el);
-                el.setMenu(handleMenuClick);
-            });
-        })();
-    }
+    // if(event.detail.name === 'page') {
+    //     (async () => {
+    //         await displayPage(event.detail.data.page.id);
+    //     })();
+    // }
 });
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -111,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
     customElements.define('ion-sub-menu', NavSubMenuElement);
     customElements.define('ion-contexxt', ContextElement);
     customElements.define('ion-user', UserElement);
-    customElements.define('ion-alert', AlertElement);
+    customElements.define('ion-modal', ModalElement);
 
     const event = new Event("action");
     const context = new Event("context");
@@ -127,19 +131,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     (async function() {
         const user = useContext("user").get("user");
-        console.log('User', user);
-        let block = 'ea636765-dae1-495e-bda5-a55d74284449';
+        let pageId = DEFAULT_PAGE_ID;
         if(user){
-            block = user.page_version_id;
+            pageId = user.default_page_id; // || DEFAULT_PAGE_ID;
         }
-        const blocks = await loadPage(block);        //TODO: lookup pageid from user profile
-        console.log('Loaded blocks', blocks);
-        const body = document.querySelector('.body');
-        blocks.forEach(block => {
-            const el = createIonBlockElement(block.id, block.block_type, block.content);
-            body.append(el);
-            el.setMenu(handleMenuClick);
-        });
+        await displayPage(pageId);
 
         // document.querySelectorAll('ion-block[type="code"]').forEach(el => {
         //     hljs.highlightElement(el);
