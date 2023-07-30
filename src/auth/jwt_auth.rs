@@ -47,7 +47,10 @@ impl FromRequest for JwtMiddleware {
 
         if token.is_none() {
             if req.method() == http::Method::OPTIONS || req.method() == http::Method::GET {
-                return ready(Ok(JwtMiddleware { user_id: GUEST_USER_ID, is_guest: true }));
+                return ready(Ok(JwtMiddleware {
+                    user_id: GUEST_USER_ID,
+                    is_guest: true,
+                }));
             }
             let json_error = ErrorResponse {
                 status: "fail".to_string(),
@@ -73,9 +76,11 @@ impl FromRequest for JwtMiddleware {
 
         let user_id = claims.sub;
         let user_id = user_id.parse::<i32>().unwrap();
-        req.extensions_mut()
-            .insert::<i32>(user_id);
+        req.extensions_mut().insert::<i32>(user_id);
 
-        ready(Ok(JwtMiddleware { user_id, is_guest: false }))
+        ready(Ok(JwtMiddleware {
+            user_id,
+            is_guest: false,
+        }))
     }
 }

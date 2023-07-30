@@ -1,9 +1,9 @@
 use utoipa::OpenApi;
 
-use crate::pages;
 use crate::auth;
-use crate::shared;
 use crate::blocks;
+use crate::pages;
+use crate::shared;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -46,4 +46,4 @@ use crate::blocks;
     ),
     external_docs(url = "http://more.about.our.apis", description = "More about our APIs")
 )]
-pub struct ApiDoc; 
+pub struct ApiDoc;

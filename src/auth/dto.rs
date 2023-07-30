@@ -21,7 +21,7 @@ pub struct TokenClaims {
     pub exp: usize,
 }
 
-#[derive(Debug, Deserialize,ToSchema)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct RegisterUserDto {
     pub name: String,
     pub email: String,
@@ -39,16 +39,16 @@ pub struct UserResponse {
     pub data: UserData,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize,ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct LoginRequestDto {
     pub username: String,
     pub password: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize,ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct LoginResponseDto {
     // {"status": "success", "token": token, "user": user}
     pub status: String,
     pub token: String,
-    pub user: UserProfileDto
+    pub user: UserProfileDto,
 }

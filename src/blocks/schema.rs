@@ -1,5 +1,5 @@
-use diesel::prelude::*;
 use chrono::NaiveDateTime;
+use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
 table! {
@@ -17,7 +17,17 @@ table! {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,AsChangeset)]
+#[derive(
+    Debug,
+    Clone,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
+    QueryableByName,
+    PartialEq,
+    AsChangeset,
+)]
 #[diesel(table_name = blocks)]
 pub struct Block {
     pub id: uuid::Uuid,
@@ -42,8 +52,10 @@ table! {
     }
 }
 
- #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,)]
- #[diesel(table_name = page_block_index)] 
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,
+)]
+#[diesel(table_name = page_block_index)]
 pub struct PageBlockIndex {
     pub id: uuid::Uuid,
     pub page_version_id: uuid::Uuid,

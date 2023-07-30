@@ -10,24 +10,23 @@ mod swagger;
 extern crate diesel;
 
 use actix_files::NamedFile;
-use actix_web::{web, App, http::header, HttpRequest, HttpServer, Result, Responder, get};
+use actix_web::{get, http::header, web, App, HttpRequest, HttpServer, Responder, Result};
 use diesel::{
-    r2d2::{self, Pool, ConnectionManager},
+    r2d2::{self, ConnectionManager, Pool},
     PgConnection,
 };
-use utoipa_swagger_ui::SwaggerUi;
 use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
-
-use std::{io, path::PathBuf};
 use actix_web::middleware::Logger;
+use std::{io, path::PathBuf};
 
 use shared::config::Config;
 
 use actix_cors::Cors;
 
 pub struct AppState {
-    pool: Pool<ConnectionManager<PgConnection>> ,
+    pool: Pool<ConnectionManager<PgConnection>>,
     config: Config,
 }
 
@@ -59,7 +58,7 @@ async fn main() -> io::Result<()> {
     env_logger::init();
 
     let config = Config::init();
-    
+
     // set up database connection pool
     let manager = ConnectionManager::<PgConnection>::new(&config.database_url);
     let pool = r2d2::Pool::builder()
@@ -69,7 +68,7 @@ async fn main() -> io::Result<()> {
     println!("Starting server at: http://localhost:8090");
 
     // Start HTTP server
-    HttpServer::new( move|| {
+    HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin("http://localhost:8090")
             .allowed_methods(vec!["GET", "PUT", "POST"])
@@ -88,13 +87,16 @@ async fn main() -> io::Result<()> {
             .wrap(Logger::default())
             .service(
                 web::scope("/api")
-                .configure(auth::config)
-                .configure(users::config)
-                .configure(blocks::config)
-                .configure(pages::config)
+                    .configure(auth::config)
+                    .configure(users::config)
+                    .configure(blocks::config)
+                    .configure(pages::config),
             )
             .service(health_check)
-            .service(SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", swagger::ApiDoc::openapi()))
+            .service(
+                SwaggerUi::new("/swagger-ui/{_:.*}")
+                    .url("/api-docs/openapi.json", swagger::ApiDoc::openapi()),
+            )
             .route("/{filename:.*}", web::get().to(index))
     })
     .bind(("127.0.0.1", 8090))?

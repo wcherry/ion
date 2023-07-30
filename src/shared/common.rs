@@ -30,7 +30,6 @@ pub enum ServiceError {
 
     // #[display(fmt = r#"{{"error":"Unauthorized"}}"#)]
     // Unauthorized,
-
     #[display(fmt = r#"{{"error":"{} not Found"}}"#, _0)]
     NotFound(String),
 }

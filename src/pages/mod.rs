@@ -1,16 +1,15 @@
-use crate::{shared::common::{ServiceError}, AppState};
-use actix_web::{get, web, Error, HttpResponse, post};
-use crate::auth::jwt_auth;
 use self::dto::{PageCreateDto, PagePermissionCreateDto};
+use crate::auth::jwt_auth;
+use crate::{shared::common::ServiceError, AppState};
+use actix_web::{get, post, web, Error, HttpResponse};
 
+pub mod dto;
 mod schema;
 pub(crate) mod service;
-pub mod dto;
-
 
 ///
 /// Retrieve a page by id (UUID)
-/// 
+///
 #[utoipa::path(
     get,
     path = "/page",
@@ -41,7 +40,7 @@ pub async fn get_page_handler(
 
 ///
 /// Retrieve all pages for a user
-/// 
+///
 #[utoipa::path(
     get,
     path = "/pages",
@@ -68,7 +67,7 @@ pub async fn get_pages_handler(
 
 ///
 /// Creates a new page and an empty block
-/// 
+///
 #[utoipa::path(
     post,
     path = "/page",
@@ -96,7 +95,7 @@ pub(super) async fn create_page_handler(
 
 ///
 /// Creates permissions for a page
-/// 
+///
 #[utoipa::path(
     post,
     path = "page/{page_id}/permission",
@@ -123,13 +122,12 @@ pub(super) async fn create_page_permission_handler(
 }
 
 pub fn config(conf: &mut web::ServiceConfig) {
-    let scope = web::scope("")
-        .service(get_pages_handler)
-        .service(web::scope("/page")
+    let scope = web::scope("").service(get_pages_handler).service(
+        web::scope("/page")
             .service(get_page_handler)
             .service(create_page_handler)
-            .service(create_page_permission_handler))    
-            ;
+            .service(create_page_permission_handler),
+    );
 
     conf.service(scope);
 }

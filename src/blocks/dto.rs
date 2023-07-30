@@ -19,11 +19,21 @@ table! {
         modes -> VarChar,
     }
 }
-  
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,ToSchema)]
+
+#[derive(
+    Debug,
+    Clone,
+    Serialize,
+    Deserialize,
+    Queryable,
+    Insertable,
+    QueryableByName,
+    PartialEq,
+    ToSchema,
+)]
 #[diesel(table_name = blocks_dtos)]
 pub struct BlockDto {
-    pub id: String, 
+    pub id: String,
     #[serde(rename = "blockId")]
     //#[schema(example = "UUID of the parent page", value_type = uuid::Uuid)]
     pub block_id: String,

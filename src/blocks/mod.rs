@@ -2,17 +2,19 @@ pub mod dto;
 mod schema;
 mod service;
 
-use actix_web::{get, post, put, web, Error, HttpResponse};
 use crate::AppState;
+use actix_web::{get, post, put, web, Error, HttpResponse};
 
-use self::service::{find_blocks_by_page_version, find_blocks_by_page, create_block_and_attach_to_page, update_block};
-use super::shared::common::ServiceError;
 use self::dto::BlockRequest;
+use self::service::{
+    create_block_and_attach_to_page, find_blocks_by_page, find_blocks_by_page_version, update_block,
+};
+use super::shared::common::ServiceError;
 use crate::auth::jwt_auth;
 
 ///
 /// Gets a list of blocks for a page version
-/// 
+///
 #[utoipa::path(
     get,
     path = "/page-version/{page_version_id}/blocks",
@@ -40,7 +42,7 @@ pub async fn get_blocks_by_version_handler(
 
 ///
 /// Gets a list of blocks for a page
-/// 
+///
 #[utoipa::path(
     get,
     path = "/page/{page_id}/blocks",
@@ -68,7 +70,7 @@ pub async fn get_blocks_for_page_handler(
 
 ///
 /// Creates a new block and attaches it to a page version
-/// 
+///
 #[utoipa::path(
     post,
     path = "/page-version/{page_version_id}/block",
@@ -95,7 +97,7 @@ pub async fn create_block_handler(
 
 ///
 /// Updates a block
-/// 
+///
 #[utoipa::path(
     put,
     path = "/page-version/{page_version_id}/block/{block_id}",
@@ -121,7 +123,6 @@ pub async fn update_block_handler(
 
     Ok(HttpResponse::Ok().json(block))
 }
-
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(get_blocks_by_version_handler);

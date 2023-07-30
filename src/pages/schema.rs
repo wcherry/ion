@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime,};
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 table! {
@@ -18,16 +18,18 @@ table! {
 }
 
 table! {
-    pages (id) {
-        id -> VarChar,
-        name -> VarChar,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-        active -> Bool,
-    }
+  pages (id) {
+      id -> VarChar,
+      name -> VarChar,
+      created_at -> Timestamp,
+      updated_at -> Timestamp,
+      active -> Bool,
   }
-  
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,)]
+}
+
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,
+)]
 pub struct Page {
     pub id: String,
     pub name: String,

@@ -67,7 +67,6 @@ impl std::convert::From<UserProfile> for UserProfileDto {
             created_by: user.created_by,
             updated_by: user.updated_by,
             active: user.active,
-
         }
     }
 }

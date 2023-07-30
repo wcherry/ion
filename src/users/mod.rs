@@ -4,10 +4,16 @@ mod service;
 
 use std::collections::HashMap;
 
-use crate::shared::{common::{DbPool, ServiceError}, schema::User};
+use crate::shared::{
+    common::{DbPool, ServiceError},
+    schema::User,
+};
 use actix_web::{get, post, web, Error, HttpResponse};
 use log::info;
-use service::{find_all_users, find_all_roles, find_role, insert_user, find_all_permissions, find_all_permissions_for_role, find_permissions_for_user_and_company};
+use service::{
+    find_all_permissions, find_all_permissions_for_role, find_all_roles, find_all_users,
+    find_permissions_for_user_and_company, find_role, insert_user,
+};
 
 #[get("/")]
 async fn get_users(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
@@ -21,7 +27,6 @@ async fn get_users(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     info!("Returning {} users", all_users.len());
     Ok(HttpResponse::Ok().json(all_users))
 }
-
 
 #[post("/")]
 async fn create_user(
@@ -145,10 +150,7 @@ async fn get_all_roles(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
 }
 
 #[get("/role/{role_id}")]
-async fn get_role(
-    pool: web::Data<DbPool>,
-    path: web::Path<i32>,
-) -> Result<HttpResponse, Error> {
+async fn get_role(pool: web::Data<DbPool>, path: web::Path<i32>) -> Result<HttpResponse, Error> {
     let role_id = path.into_inner();
     let role = web::block(move || {
         let mut conn = pool.get()?;
@@ -177,13 +179,12 @@ async fn get_role(
 
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/user")
-    .service(get_all_roles)
-    .service(get_permissions)
-    .service(get_permissions_for_roles)
-    .service(get_permissions_for_user_and_company)
-    .service(get_role)
-    // .service(get_user)
-    .service(get_users)
-        ;
+        .service(get_all_roles)
+        .service(get_permissions)
+        .service(get_permissions_for_roles)
+        .service(get_permissions_for_user_and_company)
+        .service(get_role)
+        // .service(get_user)
+        .service(get_users);
     conf.service(scope);
 }

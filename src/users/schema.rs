@@ -2,15 +2,16 @@
 use serde::{Deserialize, Serialize};
 
 table! {
-    permissions (id) {
-      id -> Integer,
-      name -> Text,
-      active -> Bool,
-    }
+  permissions (id) {
+    id -> Integer,
+    name -> Text,
+    active -> Bool,
   }
-  
+}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,
+)]
 pub struct Permission {
     pub id: i32,
     pub name: String,
@@ -24,16 +25,17 @@ pub struct RolePermission {
     pub permission_id: i32,
 }
 
-  
 table! {
-    companys (id) {
-      id -> Integer,
-      name -> VarChar,
-      active -> Bool,
-    }
+  companys (id) {
+    id -> Integer,
+    name -> VarChar,
+    active -> Bool,
   }
-  
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,)]
+}
+
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,
+)]
 pub struct Company {
     pub id: i32,
     pub name: String,
@@ -41,15 +43,17 @@ pub struct Company {
 }
 
 table! {
-    roles (id) {
-        id -> Integer,
-        name -> VarChar,
-        company_name -> VarChar,
-        active -> Bool,
-    }
+  roles (id) {
+      id -> Integer,
+      name -> VarChar,
+      company_name -> VarChar,
+      active -> Bool,
   }
-  
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,)]
+}
+
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,
+)]
 pub struct Role {
     pub id: i32,
     pub name: String,

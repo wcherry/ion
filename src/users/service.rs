@@ -3,9 +3,8 @@ use diesel::sql_types::{Integer, VarChar};
 use diesel::{insert_into, prelude::*, sql_query, PgConnection};
 use log::info;
 
-use crate::shared::schema::{User, users};
-use super::schema::{Role, Permission};
-
+use super::schema::{Permission, Role};
+use crate::shared::schema::{users, User};
 
 pub fn insert_user(conn: &mut PgConnection, user: User) -> Result<usize, DbError> {
     // FORNOW: The Mysql Rust connection doesn't support the RETURNING clause
@@ -34,7 +33,7 @@ pub fn find_all_users(conn: &mut PgConnection) -> Result<Vec<User>, DbError> {
 }
 
 // pub fn find_user(conn: &mut PgConnection, username: String, password: String) -> Result<User, DbError> {
-//     let user = sql_query("SELECT 
+//     let user = sql_query("SELECT
 //     u.id,
 //     u.name,
 //     u.email_address,
@@ -50,9 +49,9 @@ pub fn find_all_users(conn: &mut PgConnection) -> Result<Vec<User>, DbError> {
 //     u.created_by,
 //     u.updated_by,
 //     u.active
-// FROM users u 
+// FROM users u
 // LEFT JOIN profile p ON u.profile_id = p.id
-// LEFT JOIN page_versions pv ON p.default_page_id = pv.page_id 
+// LEFT JOIN page_versions pv ON p.default_page_id = pv.page_id
 // WHERE name = $1 AND password = $2")
 //     .bind::<VarChar, _>(username)
 //     .bind::<VarChar, _>(password)
@@ -65,11 +64,11 @@ pub fn find_all_users(conn: &mut PgConnection) -> Result<Vec<User>, DbError> {
 //         .bind::<Integer, _>(user_id)
 //         .get_result::<User>(conn)?;
 //     let companies: Vec<Company> = sql_query(
-//         r#"select unique c.name name, c.id, c.active 
-//   from companies c 
+//         r#"select unique c.name name, c.id, c.active
+//   from companies c
 //   join user_company_permissions ucp on c.id=ucp.company_id and ucp.user_id=?
-//   union select unique c.name name, c.id, c.active 
-//   from companies c 
+//   union select unique c.name name, c.id, c.active
+//   from companies c
 //   join user_roles ur on c.id=ur.company_id and ur.user_id=?;
 //   "#,
 //     )
@@ -147,4 +146,3 @@ pub fn find_role(conn: &mut PgConnection, role_id: i32) -> Result<Role, DbError>
         .get_result(conn)?;
     Ok(role)
 }
-
