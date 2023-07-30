@@ -1,10 +1,10 @@
 
-import {loadPage, saveBlock, loadBlocks} from './service.mjs';
+import {loadPage, saveBlock, loadBlocks, createPage, loadPageList} from './service.mjs';
 import {createIonBlockElement, BlockElement} from './block.mjs';
 import { NavMenuElement, NavMenuItemElement, NavSubMenuElement } from './menu.mjs';
 import { ContextElement, useContext } from './context.mjs';
 import { UserElement } from './user.mjs';
-import { ModalElement } from './modal.mjs';
+import { ModalElement, createModal } from './modal.mjs';
 
 const DEFAULT_PAGE_ID = '66dd25a9-01ca-47ee-a558-31346e25ab8d';
 
@@ -34,6 +34,24 @@ async function createBlockOperation(el) {
     newBlockElement.setMenu(handleMenuClick);
 }
 
+async function createPageOperation(el) {
+    // Display modal to accept page name
+    const body = `<div><span>Page Name: </span><input type="text" id="create_page_name"/></div>`
+    createModal('Create new page...', body, ['Create', 'Cancel'], (event, label, parentElement) => {
+        if(label === 'Create') {
+            const pageName = parentElement.querySelector('#create_page_name').value;
+            (async () => {
+                // Create page
+                const page = useContext("page").get("page");
+                const response = await createPage(pageName, page.id, `# ${pageName}`);
+                console.info('NEW PAGE CREATED', response);
+                // Display page
+                displayPage(response.id);
+            })();
+        }
+    });
+}
+
 function handleMenuClick(event, blockElement) {
     const elementMenu = document.querySelector('.menu');
     elementMenu.classList.toggle('toggle__closed');
@@ -47,10 +65,28 @@ function handleUserChange(event) {
     const user = event.detail.data.user;
     console.info('USER CHANGED', user);
     if(user){
-        displayPage(user.default_page_id || DEFAULT_PAGE_ID);
+        displayPage(user.defaultPageId || DEFAULT_PAGE_ID);
+        (async () => {
+            loadNavMenu();
+        })();
     } else {
         displayPage(DEFAULT_PAGE_ID);
     }
+}
+
+async function loadNavMenu() {
+    const pageList =  await loadPageList();
+    const navMenu = document.getElementById('my_pages');
+    navMenu.innerHTML = '';
+    pageList.forEach(page => {
+        const el = document.createElement('ion-menu-item');
+        el.innerHTML = `<li>${page.name}</li>`;
+        el.dataset.pageId = page.id;
+        el.addEventListener('click', () => {
+            displayPage(page.id);
+        });
+        navMenu.append(el);
+    });
 }
 
 async function displayPage(pageId) {
@@ -82,7 +118,7 @@ document.addEventListener("action", function(event) {
         case 'del': console.debug('Delete'); break;
         case 'copy': console.debug('Copy'); break;
         case 'dup': console.debug('Duplicate'); break;
-        case 'create_page': console.debug('Create page...'); break;
+        case 'create_page': createPageOperation(block); break;
         case 'create_block': createBlockOperation(block); break;
         default: console.error('Unknown operation', operation);
     }
@@ -125,17 +161,22 @@ document.addEventListener("DOMContentLoaded", function() {
 
     navToggle.addEventListener('click', () => {
         nav.classList.toggle('nav__open');
-        navToggle.classList.toggle('toggle__closed');
-        navToggle.innerHTML = navToggle.classList.contains('toggle__closed') ? ">>" : "<<";
+        navToggle.classList.toggle('toggle__open');
+        navToggle.innerHTML = navToggle.classList.contains('toggle__open') ? "<<" : ">>";
     });
 
     (async function() {
         const user = useContext("user").get("user");
         let pageId = DEFAULT_PAGE_ID;
         if(user){
-            pageId = user.default_page_id; // || DEFAULT_PAGE_ID;
+            pageId = user.defaultPageId; // || DEFAULT_PAGE_ID;
         }
-        await displayPage(pageId);
+        
+        (async () =>{
+            await displayPage(pageId);
+        })();
+
+        loadNavMenu();
 
         // document.querySelectorAll('ion-block[type="code"]').forEach(el => {
         //     hljs.highlightElement(el);

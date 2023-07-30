@@ -4,6 +4,30 @@ export async function loadPage(pageId) {
     return jsonData;
 }
 
+export async function createPage(name, parentPageId, content) {
+    const createPageRequestBody = {
+        // pageId: uuidv4(),
+        parentPageId,
+        name,
+        content
+    }
+    const response = await fetch(`/api/page`, {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(createPageRequestBody),
+    });
+    const jsonData = await response.json();
+    return jsonData;
+}
+
+export async function loadPageList() {
+    const response = await fetch(`/api/pages`);
+    const jsonData = await response.json();
+    return jsonData;
+}
+
 export async function loadBlocks(pageId) {
     const response = await fetch(`/api/page/${pageId}/blocks`);
     const jsonData = await response.json();

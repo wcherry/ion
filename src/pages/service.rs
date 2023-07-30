@@ -4,6 +4,30 @@ use super::dto::{PageCreateDto, PagePermissionCreateDto, PageDto};
 
 const DEFAULT_BLOCK_TYPE: &str = "paragraph";
 
+pub(super) fn find_all_pages(conn: &mut PgConnection, user_id: i32) -> Result<Vec<PageDto>, DbError> {
+    let pages: Vec<PageDto> = sql_query("select 
+        p.id::text id, 
+        p.name,
+        p.owner_id,
+        p.company_id,
+        p.team_id,
+        p.parent_page_id::text,
+        p.created_at,
+        p.updated_at,
+        p.active,
+        v.version,
+        v.id::text page_version_id
+    from pages p 
+        join page_versions v on p.id = v.page_id 
+    where p.owner_id = $1 
+    order by v.version desc;
+    ")
+    .bind::<sql_types::Integer, _>(user_id)
+    .get_results::<PageDto>(conn)?;
+
+    Ok(pages)
+}
+
 pub(super) fn find_page(conn: &mut PgConnection, page_id: String, user_id: i32) -> Result<PageDto, DbError> {
     let page: PageDto = sql_query("select 
         p.id::text id, 
@@ -37,6 +61,8 @@ pub(crate) fn create_page(conn: &mut PgConnection, page: PageCreateDto, user_id:
     let block_id = uuid::Uuid::new_v4();
     let parent_page_id = uuid::Uuid::parse_str(&page.parent_page_id)?;
 
+    log::info!("Creating new page id: {:?}, parent id: {:?}", page_id, parent_page_id);
+
     let _id = diesel::sql_query( "INSERT INTO pages (id, parent_page_id, name, owner_id, company_id, team_id) values($1,$2,$3,$4,$5,$6)")
         .bind::<sql_types::Uuid, _>(page_id)
         .bind::<sql_types::Uuid, _>(parent_page_id)
@@ -46,12 +72,14 @@ pub(crate) fn create_page(conn: &mut PgConnection, page: PageCreateDto, user_id:
         .bind::<sql_types::Integer, _>(0)
         .execute(conn)?;
     
+    log::info!("Creating page version id: {:?}, page id: {:?}", page_version_id, page_id);
     let _id = diesel::sql_query( "INSERT INTO page_versions (id, page_id, version) VALUES ($1,$2,$3)")
         .bind::<sql_types::Uuid, _>(page_version_id)
         .bind::<sql_types::Uuid, _>(page_id)
         .bind::<sql_types::Integer, _>(1)
         .execute(conn)?;
-    
+
+    log::info!("Creating block: {:?}", block_id);
     let _id = diesel::sql_query( "INSERT INTO blocks (id, block_id, version, block_type, content,created_by,updated_by) values($1,uuid_generate_v4(),$2,$3,$4,$5,$6)")
         .bind::<sql_types::Uuid, _>(block_id)
         .bind::<sql_types::Integer, _>(1)
@@ -61,6 +89,7 @@ pub(crate) fn create_page(conn: &mut PgConnection, page: PageCreateDto, user_id:
         .bind::<sql_types::Integer, _>(1)
         .execute(conn)?;
     
+    log::info!("Creating page/block index page version id: {:?}, block id: {:?}", page_version_id, block_id);
     let _id = diesel::sql_query( "INSERT INTO page_block_index (id, page_version_id, display_order, block_id) values(uuid_generate_v4(),$1,$2,$3)")
         .bind::<sql_types::Uuid, _>(page_version_id)
         .bind::<sql_types::Integer, _>(1)
@@ -68,6 +97,7 @@ pub(crate) fn create_page(conn: &mut PgConnection, page: PageCreateDto, user_id:
         .execute(conn)?;
     
     let page = find_page(conn, page_id.to_string(), user_id)?;
+    log::info!("Returning newly created page: {:?}", page);
     Ok(page)
 }
 

@@ -15,32 +15,71 @@ export class UserElement extends HTMLElement {
             console.info("Loaded user from cache ${this.user.name} with page ${this.user.page_version_id}");
             userContext.set('user', this.user);
         }
+        const shadow = this.attachShadow({ mode: "open" });
+        const linkElement = document.createElement("style");
+        linkElement.textContent =`
+        #login {
+            max-height: 1.5rem;
+            margin-top: 12px;   /* TODO: Fix alignment */
+        }
+        .register {
+            color: #888;
+            letter-spacing: .1rem;
+            font-size: 0.8rem;
+            /*text-align: center;*/
+            cursor: pointer;
+        }
+
+        div.login {
+            display: flex;
+            flex-direction: row;
+        }
+        div.login > div > span {
+            font-size: 8pt;
+            font-weight: 300;
+            color: #333;
+        }
+        
+        div.login > div{
+            display: flex;
+            flex-direction: column;
+            width: 80px;
+            margin-right: 10px;
+        }        
+        `
+        shadow.appendChild(linkElement);
+        this.shadow = shadow;
+        const wrapper =document.createElement('div');
+        this.wrapper = wrapper;
+        shadow.appendChild(wrapper);
         this.show();
     }
 
     async loginUser(){
         const userContext = useContext('user');
         const pageContext = useContext('page');
+
+        const username = this.shadow.getElementById('username').value;
+        const password = this.shadow.getElementById('password').value;
         
-    try{
-        const result = await loadUser(this.username, this.password);
-        if(result && result.user){
-            this.user = result.user;
-            userContext.set('user', this.user);
-            localStorage.setItem('user', JSON.stringify(this.user));
-            console.info(`LOADED USER ${this.user.name} WITH PAGE ${this.user.default_page_id}`);
-            if(this.user.default_page_id) pageContext.set('page', this.user.default_page_id);
-            this.show();
+        try{
+            const result = await loadUser(username, password);
+            if(result && result.user){
+                this.user = result.user;
+                userContext.set('user', this.user);
+                localStorage.setItem('user', JSON.stringify(this.user));
+                console.info(`LOADED USER ${this.user.name} WITH PAGE ${this.user.defaultPageId}`);
+                if(this.user.defaultPageId) pageContext.set('page', this.user.defaultPageId);
+                this.show();
+            }
+        } catch(e){
+            console.error('LOGIN FAILED', e);
+            createAlert('error', 'Login Failed', e.message);
         }
-    } catch(e){
-        console.error('LOGIN FAILED', e);
-        createAlert('error', 'Login Failed', e.message);
     }
-}
     
     async logoutUser(){
         const userContext = useContext('user');
-        const pageContext = useContext('page');
         
         this.user = null;
         userContext.set('user', this.user);
@@ -48,43 +87,32 @@ export class UserElement extends HTMLElement {
     }
     
     show(){
-        this.innerHTML = this.isLoggedin() ? `<div>Username: ${this.user.name} <button id="logout" >Logout</button></div>` :
+        
+        this.wrapper.innerHTML = this.isLoggedin() ? `<div>Username: ${this.user.name} <button id="logout" >Logout</button></div>` :
             `<div class="login"><div><span>Username</span><input id="username"></input></div><div><span>Password</span><input type="password" id="password"></input></div><button id="login" >Login</button></div>
             <div id="register" class="register">Register a new user...</div>`;    
 
-        const loginButton = document.getElementById('login');
+        const loginButton = this.shadow.getElementById('login');
         if(loginButton) {
             loginButton.addEventListener('click', () => {
                 this.loginUser();
             });
-        }            
+        } else console.error('LOGIN BUTTON NOT FOUND');           
 
-        const registerButton = document.getElementById('register');
+        const registerButton = this.shadow.getElementById('register');
         if(registerButton) {
             registerButton.addEventListener('click', () => {
                 this.registerUser();
             });
         }            
 
-        const logoutButton = document.getElementById('logout');
+        const logoutButton = this.shadow.getElementById('logout');
         if(logoutButton) {
             logoutButton.addEventListener('click', () => {
                 this.logoutUser();
                 this.show();
             });
         }            
-        const usernameInput = document.getElementById('username');
-        if(usernameInput) {
-            usernameInput.addEventListener('change', (e) => {
-                this.username = e.target.value;
-            });
-        }
-        const passwordInput = document.getElementById('password');
-        if(passwordInput) {
-            passwordInput.addEventListener('change', (e) => {              
-                this.password = e.target.value;
-            });
-        }
     }
 
     isLoggedin() {

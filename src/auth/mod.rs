@@ -16,7 +16,7 @@ use serde_json::json;
 
 use dto::RegisterUserDto;
 
-use crate::{AppState, shared::dto::UserDto, auth::dto::LoginResponseDto};
+use crate::{AppState, shared::dto::{UserDto, UserProfileDto}, auth::dto::LoginResponseDto};
 use crate::shared::common::ServiceError;
 use crate::auth::dto::{LoginRequestDto, TokenClaims};
 use service::{find_user, is_exists, create_user};
@@ -124,7 +124,7 @@ async fn login_user_handler(
 
     Ok(HttpResponse::Ok()
         .cookie(cookie)
-        .json(LoginResponseDto{status: String::from("success"), token, user}))
+        .json(LoginResponseDto{status: String::from("success"), token, user: UserProfileDto::from(user)}))
 }
 
 ///

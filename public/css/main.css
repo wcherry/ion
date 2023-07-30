@@ -79,18 +79,6 @@
     left: 210px;
 }
 
-#login {
-    max-height: 1.5rem;
-    margin-top: 12px;   /* TODO: Fix alignment */
-}
-.register {
-    color: #888;
-    letter-spacing: .1rem;
-    font-size: 0.8rem;
-    /*text-align: center;*/
-    cursor: pointer;
-}
-
 .element {
     padding-left: 1rem;
     background-color: #fff;
@@ -133,8 +121,12 @@ ul.sub__menu {
 }
 
 .toggle__closed {
-    display: none;
+   display: none;
     visibility: hidden;
+}
+
+.toggle__open {
+    left: 210px;
 }
 
 .menu-toggle {
@@ -146,24 +138,6 @@ ul.sub__menu {
     visibility: hidden;
     cursor: pointer;
 }
-
-div.login {
-    display: flex;
-    flex-direction: row;
-}
-div.login > div > span {
-    font-size: 8pt;
-    font-weight: 300;
-    color: #333;
-}
-
-div.login > div{
-    display: flex;
-    flex-direction: column;
-    width: 80px;
-    margin-right: 10px;
-}
- 
 
 .el {
     width: 60%;
@@ -220,3 +194,36 @@ div.login > div{
     cursor: pointer;
     visibility: hidden;
 }
+
+body {
+    position: relative;
+    height: 100vh;
+}
+
+@media (min-width: 1024px) {
+    .body {
+        position: relative; 
+      left: 240px;
+      min-height: 80vh;
+      max-height: 80vh;
+    }
+    .nav__toggle{
+        visibility: hidden;
+    }
+    .element {
+        margin-left: 0;
+        padding-left: 40px;
+    }
+    .el {
+        margin-left: 5%;
+        width: 50%;
+    }
+    .nav__left {
+        left: 2px;
+        top: 32px;
+        border-radius: 0;
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+        max-height: 400px;
+    
+    }
+  }

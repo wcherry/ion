@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::shared::schema::UserProfile;
+use crate::shared::dto::UserProfileDto;
 
 #[allow(non_snake_case)]
 #[derive(Debug, Serialize)]
@@ -50,5 +50,5 @@ pub struct LoginResponseDto {
     // {"status": "success", "token": token, "user": user}
     pub status: String,
     pub token: String,
-    pub user: UserProfile
+    pub user: UserProfileDto
 }

@@ -24,6 +24,7 @@ pub struct PageDto {
 
 #[derive(Debug,Deserialize,ToSchema)]
 pub struct PageCreateDto {
+    #[serde(rename = "pageId")]
     pub page_id: Option<uuid::Uuid>,
     #[schema(example = "My New Page")]
     pub name: String,

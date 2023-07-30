@@ -8,12 +8,16 @@ use crate::blocks;
 #[derive(OpenApi)]
 #[openapi(
     paths(
+    // Auth
         auth::register_user_handler, 
         auth::login_user_handler,
         auth::logout_handler,
+    // Pages
         pages::create_page_handler, 
         pages::get_pages_handler,
+        pages::get_page_handler,
         pages::create_page_permission_handler, 
+    // Blocks
         blocks::get_blocks_by_version_handler,
         blocks::get_blocks_for_page_handler,
         blocks::create_block_handler,
@@ -27,7 +31,7 @@ use crate::blocks;
             auth::dto::RegisterUserDto, 
             auth::dto::LoginRequestDto, 
             auth::dto::LoginResponseDto,
-            shared::schema::UserProfile,
+            shared::dto::UserProfileDto,
             blocks::dto::BlockDto, 
             blocks::dto::BlockRequest, 
         ),
