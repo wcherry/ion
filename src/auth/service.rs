@@ -9,7 +9,7 @@ use crate::shared::schema::{Profile, User, UserProfile};
 // use schema::{Role, Permission, Company};
 
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
 };
 

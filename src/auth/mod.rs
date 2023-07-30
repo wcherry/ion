@@ -8,7 +8,7 @@ use actix_web::{
 };
 
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{PasswordHash, PasswordVerifier},
     Argon2,
 };
 use chrono::{prelude::*, Duration};

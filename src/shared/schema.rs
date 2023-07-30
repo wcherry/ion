@@ -1,7 +1,7 @@
 // use diesel::{prelude::*};
 use ::utoipa::ToSchema;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+
 
 table! {
   user_profiles (id) {
