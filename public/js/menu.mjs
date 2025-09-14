@@ -35,11 +35,11 @@ export class NavMenuItemElement extends HTMLElement {
         const body = self.innerHTML;
         const title = this.attributes.title ? this.attributes.title.value : body;
         const type = this.attributes.type ? this.attributes.type.value : 'link';
-        const op = this.dataset.operation.value
+        // const op = this.dataset.operation.value
         const li = document.createElement('li');
         li.dataset.id = id;
         li.classList.add('menu__link');
-        li.dataset.op = op;
+        // li.dataset.op = op;
         li.dataset.type = type;
         li.innerHTML = title;
         this.innerHTML = null;

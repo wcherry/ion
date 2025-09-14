@@ -31,7 +31,7 @@ pub async fn get_blocks_by_version_handler(
 ) -> Result<HttpResponse, Error> {
     let page_version_id = path.into_inner();
     let blocks = web::block(move || {
-        let mut conn = app.pool.get()?;
+        let mut conn = app.get_connection()?;
         find_blocks_by_page_version(&mut conn, page_version_id, jwt.user_id)
     })
     .await?
@@ -59,7 +59,7 @@ pub async fn get_blocks_for_page_handler(
 ) -> Result<HttpResponse, Error> {
     let page_id = path.into_inner();
     let blocks = web::block(move || {
-        let mut conn = app.pool.get()?;
+        let mut conn = app.get_connection()?;
         find_blocks_by_page(&mut conn, page_id, jwt.user_id)
     })
     .await?
@@ -86,7 +86,7 @@ pub async fn create_block_handler(
     web::Json(body): web::Json<BlockRequest>,
 ) -> Result<HttpResponse, Error> {
     let block = web::block(move || {
-        let mut conn = app.pool.get()?;
+        let mut conn = app.get_connection()?;
         create_block_and_attach_to_page(&mut conn, body)
     })
     .await?
@@ -115,7 +115,7 @@ pub async fn update_block_handler(
 ) -> Result<HttpResponse, Error> {
     let (_page_version_id, block_id) = path.into_inner();
     let block = web::block(move || {
-        let mut conn = app.pool.get()?;
+        let mut conn = app.get_connection()?;
         update_block(&mut conn, block_id, body)
     })
     .await?

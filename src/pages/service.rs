@@ -1,11 +1,53 @@
 use super::dto::{PageCreateDto, PageDto, PagePermissionCreateDto};
-use crate::shared::common::DbError;
-use diesel::{prelude::*, sql_query, sql_types, PgConnection};
+use crate::shared::common::{Connection, DbError, IonError};
+use std::sync::Mutex;
+use std::{fs::File};
+use std::io::{BufReader};
+use std::error::Error;
+use serde_json::from_reader;
+use diesel::{prelude::*, sql_query, sql_types::{self, Uuid}};
 
 const DEFAULT_BLOCK_TYPE: &str = "paragraph";
 
+#[derive(serde::Deserialize, Clone)]
+struct PageSetTemplate {
+    pub root_page_template_file_name: (String, String),
+    pub sub_page_template_file_names: Vec<(String, String)>,
+}
+
+static PAGE_SET_TEMPLATES: Mutex<Vec<PageSetTemplate>> = Mutex::new(vec![]);
+
+fn load_page_set_templates(file_path: &str) -> Result<usize, Box<dyn Error>> {
+    let file = match File::open(file_path) {
+        Ok(f) => f,
+        Err(e) => return Err(Box::new(e)),
+    };
+    let reader = BufReader::new(file);
+    let templates: Vec<PageSetTemplate> = match from_reader(reader) {
+        Ok(t) => t,
+        Err(e) => return Err(Box::new(e)),
+    };
+
+    let mut templates_guard = PAGE_SET_TEMPLATES.lock()?;
+    templates_guard.extend(templates);
+
+    Ok(templates_guard.len())   
+}
+
+fn find_page_set_template(conn: &mut Connection, template_name: &str) -> Result<PageSetTemplate, Box<dyn Error>> {
+    let templates_guard = PAGE_SET_TEMPLATES.lock()?;
+    for template in templates_guard.iter() {
+        if template.root_page_template_file_name.0 == template_name {
+            return Ok(template.clone());    //TODO: Fix this later, template is read-only
+        }
+    }
+    Err(Box::new(IonError { message: format!("Template {} not found", template_name) }))
+}
+
+
+
 pub(super) fn find_all_pages(
-    conn: &mut PgConnection,
+    conn: &mut Connection,
     user_id: i32,
 ) -> Result<Vec<PageDto>, DbError> {
     let pages: Vec<PageDto> = sql_query(
@@ -34,8 +76,8 @@ pub(super) fn find_all_pages(
 }
 
 pub(super) fn find_page(
-    conn: &mut PgConnection,
-    page_id: String,
+    conn: &mut Connection,
+    page_id: &String,
     user_id: i32,
 ) -> Result<PageDto, DbError> {
     let page: PageDto = sql_query("select 
@@ -65,7 +107,7 @@ pub(super) fn find_page(
 }
 
 pub(crate) fn create_page(
-    conn: &mut PgConnection,
+    conn: &mut Connection,
     page: PageCreateDto,
     user_id: i32,
 ) -> Result<PageDto, DbError> {
@@ -122,13 +164,13 @@ pub(crate) fn create_page(
         .bind::<sql_types::Uuid, _>(block_id)
         .execute(conn)?;
 
-    let page = find_page(conn, page_id.to_string(), user_id)?;
+    let page = find_page(conn, &page_id.to_string(), user_id)?;
     log::info!("Returning newly created page: {:?}", page);
     Ok(page)
 }
 
 pub(super) fn create_page_permission(
-    conn: &mut PgConnection,
+    conn: &mut Connection,
     perm: PagePermissionCreateDto,
     user_id: i32,
 ) -> Result<usize, DbError> {
@@ -146,4 +188,24 @@ pub(super) fn create_page_permission(
         .bind::<sql_types::Integer, _>(user_id)
         .execute(conn)?;
     Ok(_id)
+}
+
+pub(crate) fn create_page_set(conn: &mut Connection, default_page_set: String, page_root: Option<Uuid>) -> Result<(uuid::Uuid, uuid::Uuid), Box<dyn Error>> {
+    // load the page set template
+    let template = find_page_set_template(conn, &default_page_set)?;
+
+    if page_root.is_some() {
+        // attach the new page set to the existing root
+        
+    }
+
+    // create a new root page from the template
+  
+
+
+    // create a new page set from the template
+
+    
+    
+    Ok((uuid::Uuid::new_v4(), uuid::Uuid::new_v4()))
 }

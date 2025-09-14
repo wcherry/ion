@@ -1,18 +1,21 @@
+
 mod auth;
 mod blocks;
-mod pages;
+pub mod pages;
 mod shared;
-mod users;
-
+pub mod users;
+mod api;
+pub mod helper;
 mod swagger;
 
 #[macro_use]
 extern crate diesel;
+extern crate diesel_migrations;
 
 use actix_files::NamedFile;
 use actix_web::{get, http::header, web, App, HttpRequest, HttpServer, Responder, Result};
 use diesel::{
-    r2d2::{self, ConnectionManager, Pool},
+    r2d2::{self, ConnectionManager},
     PgConnection,
 };
 use utoipa::OpenApi;
@@ -21,23 +24,24 @@ use utoipa_swagger_ui::SwaggerUi;
 use actix_web::middleware::Logger;
 use std::{io, path::PathBuf};
 
-use shared::config::Config;
+use shared::common::{AppState, Config, CountResult};
 
 use actix_cors::Cors;
 
-pub struct AppState {
-    pool: Pool<ConnectionManager<PgConnection>>,
-    config: Config,
-}
+use diesel::{prelude::*, sql_query};
 
 const CLIENT_PATH: &str = "./public/";
 
-async fn index(req: HttpRequest) -> Result<NamedFile> {
+async fn index(req: HttpRequest, app: web::Data<AppState>) -> Result<NamedFile> {
     let mut filename: &str = req.match_info().query("filename");
     let mut path: PathBuf = PathBuf::new();
     path.push(CLIENT_PATH);
     if filename.is_empty() {
         filename = "index.html";
+    }
+
+    if filename == "index.html" && !app.is_init_completed() {
+        filename = "init.html";
     }
     path.push(filename);
     println!("{:?}", &path);
@@ -65,6 +69,17 @@ async fn main() -> io::Result<()> {
         .build(manager)
         .expect("Failed to create pool.");
 
+    let mut conn: r2d2::PooledConnection<ConnectionManager<PgConnection>> = pool.get().expect("Failed to get connection from pool");
+    
+    let result: CountResult = sql_query("SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_name = 'users'")
+        .get_result::<CountResult>(&mut conn)
+        .expect("Failed to execute test query");
+    
+    let is_db_ready = result.count == 1;
+    if !is_db_ready {
+        println!("Database not initialized. Please run the migrations in production before starting the server.");
+    }
+
     println!("Starting server at: http://localhost:8090");
 
     // Start HTTP server
@@ -79,14 +94,16 @@ async fn main() -> io::Result<()> {
             ])
             .supports_credentials();
         App::new()
-            .app_data(web::Data::new(AppState {
-                pool: pool.clone(),
-                config: config.clone(),
-            }))
+            .app_data(web::Data::new(AppState::new(
+                pool.clone(),
+                config.clone(),
+                is_db_ready,
+            )))
             .wrap(cors)
             .wrap(Logger::default())
             .service(
                 web::scope("/api")
+                    .configure(api::config)
                     .configure(auth::config)
                     .configure(users::config)
                     .configure(blocks::config)

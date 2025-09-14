@@ -46,8 +46,7 @@ pub async fn register_user_handler(
     app: web::Data<AppState>,
 ) -> Result<HttpResponse, Error> {
     let mut conn = app
-        .pool
-        .get()
+        .get_connection()
         .map_err(|err| ServiceError::NotFound(err.to_string()))?;
 
     let exists = is_exists(&mut conn, body.name.to_owned())
@@ -90,9 +89,9 @@ async fn login_user_handler(
     app: web::Data<AppState>,
     web::Json(body): web::Json<LoginRequestDto>,
 ) -> Result<HttpResponse, Error> {
-    let secret = app.config.jwt_secret.clone();
+    let secret = app.get_config().jwt_secret.clone();
     let mut user = web::block(move || {
-        let mut conn = app.pool.get()?;
+        let mut conn = app.get_connection()?;
         find_user(&mut conn, body.username)
     })
     .await?
@@ -142,14 +141,14 @@ async fn login_user_handler(
 /// Logout a user
 ///
 #[utoipa::path(
-    get,
+    post,
     tag = "Authentication",
     path = "/logout",    
     responses(
         (status = 200, description = "Successfully logged out the current user ")
     )
 )]
-#[get("/logout")]
+#[post("/logout")]
 async fn logout_handler(_: jwt_auth::JwtMiddleware) -> Result<HttpResponse, Error> {
     let cookie = Cookie::build("token", "")
         .path("/")
@@ -164,7 +163,7 @@ async fn logout_handler(_: jwt_auth::JwtMiddleware) -> Result<HttpResponse, Erro
 
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/auth")
-        .service(register_user_handler)
+        // .service(register_user_handler)
         .service(login_user_handler)
         .service(logout_handler);
     conf.service(scope);

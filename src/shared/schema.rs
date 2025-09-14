@@ -61,11 +61,7 @@ table! {
       password -> VarChar,
       email_address -> VarChar,
       role  -> VarChar,
-      profile_id -> Nullable<Integer>,
-      // avatar_url -> Nullable<VarChar>,
-      // bio -> Nullable<Text>,
-      // default_page_id -> Uuid,
-      // page_version_id -> Uuid,
+      profile_id -> Integer,
       company_id -> Nullable<Integer>,
       created_at -> Timestamp,
       updated_at -> Timestamp,
@@ -78,17 +74,14 @@ table! {
 #[derive(
     Debug, Clone, Serialize, Deserialize, Queryable, Insertable, QueryableByName, PartialEq,
 )]
+#[table_name = "users"]
 pub struct User {
     pub id: i32,
     pub name: String,
     pub password: String,
     pub email_address: String,
     pub role: String,
-    pub profile_id: Option<i32>,
-    // pub avatar_url: Option<String>,
-    // pub bio: Option<String>,
-    // pub default_page_id: uuid::Uuid,
-    // pub page_version_id: uuid::Uuid,
+    pub profile_id: i32,
     pub company_id: Option<i32>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
@@ -96,6 +89,7 @@ pub struct User {
     pub updated_by: i32,
     pub active: bool,
 }
+
 
 table! {
   profile (id) {

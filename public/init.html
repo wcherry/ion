@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Project ION</title>
+    <style>
+        .modal_overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* z-index: 999; */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+        }
+
+        .modal {
+            background-color: #fff;
+            width: 400px;
+            height: 300px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+    <div class="modal_overlay">
+        <div class="modal">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password">
+            <label for="repeat_password">Repeat Password:</label>
+            <input type="password" id="repeat_password" name="repeat_password">
+            <label for="email">Email (optional):</label>
+            <input type="email" id="email" name="email">
+            <label for="Default Page Set">Default Page Set (optional):</label>
+            <select id="default_page_set" name="default_page_set">
+                <option value="simple">Siple</option>
+                <option value="personal">Personal</option>
+                <option value="work">Work</option>
+                <option value="projects">Projects</option>
+            </select>
+            <button id="register">Initilize Database</button>
+        </div>
+    </div>
+</div>
+<script>
+    // Function to handle the registration process
+    async function register() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const repeatPassword = document.getElementById('repeat_password').value;
+
+        if (password !== repeatPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
+
+        // Send the data to your server
+        const result = await fetch('api/init', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        })
+        // Close the modal after registration
+        //document.querySelector('.modal_overlay').style.display = 'none';
+        if (result.ok) {
+            window.location.href = 'index.html';
+        } else {
+            alert("Failed to initialize the database. Please try again.");
+        }
+    }
+
+    // Attach the register function to the button
+    document.getElementById('register').addEventListener('click', register);
+</script>
+</body>
+</html>

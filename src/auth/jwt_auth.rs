@@ -61,7 +61,7 @@ impl FromRequest for JwtMiddleware {
 
         let claims = match decode::<TokenClaims>(
             &token.unwrap(),
-            &DecodingKey::from_secret(data.config.jwt_secret.as_ref()),
+            &DecodingKey::from_secret(data.get_config().jwt_secret.as_ref()),
             &Validation::default(),
         ) {
             Ok(c) => c.claims,

@@ -5,7 +5,7 @@ use actix_web::{get, post, web, Error, HttpResponse};
 
 pub mod dto;
 mod schema;
-pub(crate) mod service;
+pub mod service;
 
 ///
 /// Retrieve a page by id (UUID)
@@ -28,12 +28,12 @@ pub async fn get_page_handler(
     let user_id = jwt.user_id;
     println!("user_id: {}", user_id);
     let page_id = path.into_inner();
-    let page = web::block(move || {
-        let mut conn = app.pool.get()?;
-        service::find_page(&mut conn, page_id, user_id)
-    })
-    .await?
-    .map_err(|err| ServiceError::NotFound(err.to_string()))?;
+ //   let page = web::block(move || {
+        let mut conn = app.get_connection().expect("Failed to get DB connection");
+        let page = service::find_page(&mut conn, &page_id, user_id)
+   // })
+   // .await?
+    .map_err(|_err| ServiceError::NotFound(page_id))?;
 
     Ok(HttpResponse::Ok().json(page))
 }
@@ -57,7 +57,7 @@ pub async fn get_pages_handler(
     let user_id = jwt.user_id;
     println!("user_id: {}", user_id);
     let pages = web::block(move || {
-        let mut conn = app.pool.get()?;
+        let mut conn = app.get_connection()?;
         service::find_all_pages(&mut conn, user_id)
     })
     .await?
@@ -84,7 +84,7 @@ pub(super) async fn create_page_handler(
     web::Json(body): web::Json<PageCreateDto>,
 ) -> Result<HttpResponse, Error> {
     let page = web::block(move || {
-        let mut conn = app.pool.get()?;
+        let mut conn = app.get_connection()?;
         service::create_page(&mut conn, body, jwt.user_id)
     })
     .await?
@@ -112,7 +112,7 @@ pub(super) async fn create_page_permission_handler(
     web::Json(body): web::Json<PagePermissionCreateDto>,
 ) -> Result<HttpResponse, Error> {
     let id = web::block(move || {
-        let mut conn = app.pool.get()?;
+        let mut conn = app.get_connection()?;
         service::create_page_permission(&mut conn, body, jwt.user_id)
     })
     .await?

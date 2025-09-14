@@ -1,11 +1,12 @@
 use crate::pages::dto::PageCreateDto;
 use crate::shared::common::DbError;
 use diesel::sql_types::{Integer, Uuid, VarChar};
-use diesel::{prelude::*, sql_query, PgConnection};
+use diesel::{prelude::*, sql_query};
 // use log::info;
 
 use crate::pages::service::create_page;
 use crate::shared::schema::{Profile, User, UserProfile};
+use crate::shared::common::Connection;
 // use schema::{Role, Permission, Company};
 
 use argon2::{
@@ -13,7 +14,7 @@ use argon2::{
     Argon2,
 };
 
-pub fn find_user(conn: &mut PgConnection, username: String) -> Result<UserProfile, DbError> {
+pub fn find_user(conn: &mut Connection, username: String) -> Result<UserProfile, DbError> {
     let user = sql_query(
         "SELECT 
     u.id,
@@ -42,7 +43,7 @@ WHERE name = $1",
     Ok(user)
 }
 
-pub fn is_exists(conn: &mut PgConnection, username: String) -> Result<bool, DbError> {
+pub fn is_exists(conn: &mut Connection, username: String) -> Result<bool, DbError> {
     // let exists: i64 = sql_query("SELECT count(*) id FROM users WHERE name = $1")
     // .bind::<VarChar, _>(username)
     // .get_result(conn)?;
@@ -53,7 +54,7 @@ pub fn is_exists(conn: &mut PgConnection, username: String) -> Result<bool, DbEr
 }
 
 pub fn create_user(
-    conn: &mut PgConnection,
+    conn: &mut Connection,
     username: String,
     email: String,
     password: String,

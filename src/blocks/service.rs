@@ -1,6 +1,6 @@
 use super::dto::{BlockDto, BlockRequest};
 use super::schema::{blocks, page_block_index, Block, PageBlockIndex};
-use crate::shared::common::DbError;
+use crate::shared::common::{Connection, DbError};
 use diesel::{prelude::*, sql_query, sql_types::*, PgConnection};
 
 pub fn get_block(conn: &mut PgConnection, id: String) -> Result<Block, DbError> {
@@ -131,7 +131,7 @@ pub fn create_block_and_attach_to_page(
 }
 
 pub fn find_blocks_by_page_version(
-    conn: &mut PgConnection,
+    conn: &mut Connection,
     page_version_id: String,
     user_id: i32,
 ) -> Result<Vec<BlockDto>, DbError> {
@@ -170,7 +170,7 @@ order by i.display_order asc
 }
 
 pub fn find_blocks_by_page(
-    conn: &mut PgConnection,
+    conn: &mut Connection,
     page_id: String,
     user_id: i32,
 ) -> Result<Vec<BlockDto>, DbError> {

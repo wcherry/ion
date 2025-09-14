@@ -1,6 +1,6 @@
 
-import {loadPage, saveBlock, loadBlocks, createPage, loadPageList} from './service.mjs';
-import {createIonBlockElement, BlockElement} from './block.mjs';
+import { loadPage, loadBlocks, createPage, loadPageList } from './service.mjs';
+import { BlockElement } from './block.mjs';
 import { NavMenuElement, NavMenuItemElement, NavSubMenuElement } from './menu.mjs';
 import { ContextElement, useContext } from './context.mjs';
 import { UserElement } from './user.mjs';
@@ -15,6 +15,47 @@ function styleOperation(el, data) {
     el.setAttribute('type', newType);
 }
 
+function createTableOperation(el, data) {
+    const blockElement = BlockElement.new({blockType: 'table', content: data});
+    el.after(blockElement);
+    blockElement.setMenu(handleMenuClick);
+
+    // const oldType = el.attributes.type.value;
+    // const {type, cols, rows, style} = data;
+    // const id = el.id;
+    // el.setAttribute('type', type);
+    // let table = `<table class="${style}">`;
+    // if(data.headers && data.headers === 'true') {
+    //     table += '<thead><tr>';
+    //     for(let c=0; c<cols; c++) {
+    //         table += `<th class="editable" contenteditable>Header ${c+1}</th>`;
+    //     }
+    //     table += '</tr></thead>';
+    // }
+    // table += '<tbody>';
+    // for(let r=0; r<rows; r++) {
+    //     table += '<tr>';
+    //     for(let c=0; c<cols; c++) {
+    //         table += `<td class="editable" contenteditable>Data ${r+1}-${c+1}</td>`;
+    //     }
+    //     table += '</tr>';
+    // }
+    // table += '</tbody></table>';
+    // el.innerHTML = table;
+    // el.dataset.dirty = false;
+    // const parent = el;
+    // parent.querySelectorAll('.editable').forEach(el => {
+    //     // el.attributes.contenteditable = true;
+    //     el.dataset.value = el.innerHTML;
+    //     el.addEventListener('blur', (e) => {
+    //         if(el.innerHTML !== el.dataset.value) {
+    //             console.info("TABLE CELL CHANGED", el.innerHTML, el.dataset.value);
+    //             parent.setAttribute("dirty", true);
+    //         }
+    //     });
+    // });
+}
+
 function copyBlockLinkOperation(el) {
     const id = getState(el.parentElement, 'elementId');
     const blockAddress = document.location.href.split('#')[0] + '#' + id;
@@ -24,13 +65,13 @@ function copyBlockLinkOperation(el) {
 
 async function createBlockOperation(el) {
     const {pageVersionId} = useContext("page").get("page");
-    const id = el.id;
-    const parentElement = el.parentElement;
-    const lastType = el.attributes.type.value;
     const index = [...document.querySelector(".body").children].indexOf(el);
-    let result = await saveBlock({pageVersionId, block_type: lastType, content: 'Sample text #2', display_order: index+2});
-    let newBlockElement = createIonBlockElement(result.id, result.block_type, result.content);
+
+    const displayOrder = el.block.displayOrder || 0;
+
+    const newBlockElement = BlockElement.new({pageVersionId, displayOrder: displayOrder+1, blockType: "paragraph", content: `Sample text #${index}`}); //createIonBlockElement(result.id, result.blockType, content);
     el.after(newBlockElement);
+    newBlockElement.saveBlock();
     newBlockElement.setMenu(handleMenuClick);
 }
 
@@ -44,7 +85,6 @@ async function createPageOperation(el) {
                 // Create page
                 const page = useContext("page").get("page");
                 const response = await createPage(pageName, page.id, `# ${pageName}`);
-                console.info('NEW PAGE CREATED', response);
                 // Display page
                 displayPage(response.id);
             })();
@@ -54,11 +94,13 @@ async function createPageOperation(el) {
 
 function handleMenuClick(event, blockElement) {
     const elementMenu = document.querySelector('.menu');
-    elementMenu.classList.toggle('toggle__closed');
     elementMenu.dataset.blockId = blockElement.id;
     const type = event.detail.type || 'paragraph';
     elementMenu.dataset.type = type;
-    elementMenu.style.top=`${blockElement.getBoundingClientRect().top}px`;
+    elementMenu.style.top=`${blockElement.getBoundingClientRect().top+2}px`;
+    elementMenu.style.left=`${blockElement.getBoundingClientRect().left-156}px`;
+    elementMenu.style.zIndex=1000;
+    elementMenu.classList.toggle('toggle__closed');
 }
 
 function handleUserChange(event) {
@@ -100,7 +142,7 @@ async function displayPage(pageId) {
         const writable = block.modes.indexOf('owner')>=0 || block.modes.indexOf('admin')>=0 || block.modes.indexOf('write')>=0;
         block.writable = writable;
         block.pageVersionId = page.pageVersionId;
-        const el = createIonBlockElement(block);
+        const el = BlockElement.load(block); // createIonBlockElement(block);
         body.append(el);
         el.setMenu(handleMenuClick);
     });
@@ -108,12 +150,12 @@ async function displayPage(pageId) {
 
 document.addEventListener("action", function(event) {
     const operation = event.detail.data.operation;
-    
     const elementMenu = document.querySelector('.menu');
     const blockId = elementMenu.dataset.blockId;
     const block = document.getElementById(blockId);
     switch(operation) {
         case 'style': styleOperation(block, event.detail.data); break;
+        case 'table': createTableOperation(block, event.detail.data); break;
         case 'copy_block_link': copyBlockLinkOperation(block); break;
         case 'del': console.debug('Delete'); break;
         case 'copy': console.debug('Copy'); break;
@@ -149,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function() {
     customElements.define('ion-floating-menu', NavMenuElement);
     customElements.define('ion-menu-item', NavMenuItemElement);
     customElements.define('ion-sub-menu', NavSubMenuElement);
-    customElements.define('ion-contexxt', ContextElement);
+    customElements.define('ion-context', ContextElement);
     customElements.define('ion-user', UserElement);
     customElements.define('ion-modal', ModalElement);
 

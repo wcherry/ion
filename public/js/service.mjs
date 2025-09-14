@@ -83,9 +83,28 @@ export async function register(name, email, password){
     return jsonData;
 }
 
+export async function logoutUser(){
+    let response;
+    try{
+        response = await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            redirect: "follow", // manual, *follow, error
+            referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+        });
+    }catch(e){ 
+        console.error('ERROR LOGGING OUT USER', e);
+        throw e;
+    }
+}
+
 export async function saveBlock(blockRequest) {
     const {blockId, pageVersionId} = blockRequest;
-    
+    //blockRequest.content = JSON.stringify(blockRequest.content || {});
+    const body = JSON.stringify(blockRequest);
+    console.info("SAVE BLOCK REQUEST", body);
     let response;
     if(blockId){
         response = await fetch(`/api/page-version/${pageVersionId}/block/${blockId}`, {
@@ -93,7 +112,7 @@ export async function saveBlock(blockRequest) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(blockRequest)
+            body: body
         });
     }else { 
         response = await fetch(`/api/page-version/${pageVersionId}/block`, {
@@ -101,7 +120,7 @@ export async function saveBlock(blockRequest) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(blockRequest)
+            body: body
         });
     }
     const jsonData = await response.json();

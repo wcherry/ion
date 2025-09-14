@@ -1,18 +1,17 @@
 mod dto;
-mod schema;
-mod service;
+pub mod schema;
+pub mod service;
 
 use std::collections::HashMap;
 
 use crate::shared::{
-    common::{DbPool, ServiceError},
-    schema::User,
+    common::{DbPool, ServiceError}, dto::NewUserDto, schema::User
 };
 use actix_web::{get, post, web, Error, HttpResponse};
 use log::info;
 use service::{
     find_all_permissions, find_all_permissions_for_role, find_all_roles, find_all_users,
-    find_permissions_for_user_and_company, find_role, insert_user,
+    find_permissions_for_user_and_company, find_role,
 };
 
 #[get("/")]
@@ -28,20 +27,20 @@ async fn get_users(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     Ok(HttpResponse::Ok().json(all_users))
 }
 
-#[post("/")]
-async fn create_user(
-    pool: web::Data<DbPool>,
-    web::Json(body): web::Json<User>,
-) -> Result<HttpResponse, Error> {
-    web::block(move || {
-        let mut conn = pool.get()?;
-        insert_user(&mut conn, body)
-    })
-    .await?
-    .map_err(|err| ServiceError::BadRequest(err.to_string()))?;
+// #[post("/")]
+// async fn create_user(
+//     pool: web::Data<DbPool>,
+//     web::Json(body): web::Json<NewUserDto>,
+// ) -> Result<HttpResponse, Error> {
+//     web::block(move || {
+//         let mut conn = pool.get()?;
+//         insert_user(&mut conn, body)
+//     })
+//     .await?
+//     .map_err(|err| ServiceError::BadRequest(err.to_string()))?;
 
-    Ok(HttpResponse::Ok().json("Saved User"))
-}
+//     Ok(HttpResponse::Ok().json("Saved User"))
+// }
 
 #[get("/permissions")]
 async fn get_permissions(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {

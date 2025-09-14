@@ -1,6 +1,6 @@
 import { createAlert, createModal } from "./modal.mjs";
 import { useContext } from "./context.mjs";
-import { loadUser, register } from "./service.mjs";
+import { loadUser, register, logoutUser } from "./service.mjs";
 
 export class UserElement extends HTMLElement {
     static get observedAttributes() {
@@ -12,7 +12,7 @@ export class UserElement extends HTMLElement {
         const userString = localStorage.getItem('user');
         if(userString) {
             this.user = JSON.parse(userString);
-            console.info("Loaded user from cache ${this.user.name} with page ${this.user.page_version_id}");
+            console.info(`Loaded user from cache ${this.user.name} with page ${this.user.page_version_id}`);
             userContext.set('user', this.user);
         }
         const shadow = this.attachShadow({ mode: "open" });
@@ -45,7 +45,7 @@ export class UserElement extends HTMLElement {
             flex-direction: column;
             width: 80px;
             margin-right: 10px;
-        }        
+        }
         `
         shadow.appendChild(linkElement);
         this.shadow = shadow;
@@ -84,11 +84,12 @@ export class UserElement extends HTMLElement {
         this.user = null;
         userContext.set('user', this.user);
         localStorage.removeItem('user');
+        await logoutUser();
     }
     
     show(){
         
-        this.wrapper.innerHTML = this.isLoggedin() ? `<div>Username: ${this.user.name} <button id="logout" >Logout</button></div>` :
+        this.wrapper.innerHTML = this.isLoggedin() ? `<div>Welcome: ${this.user.name}&nbsp;&nbsp;&nbsp;<button id="logout" >Logout</button></div>` :
             `<div class="login"><div><span>Username</span><input id="username"></input></div><div><span>Password</span><input type="password" id="password"></input></div><button id="login" >Login</button></div>
             <div id="register" class="register">Register a new user...</div>`;    
 

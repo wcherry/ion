@@ -27,7 +27,7 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     z-index: 100;
     position: fixed;
-    top: 10px;
+    top: 48px;
     left: -240px;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -220,10 +220,45 @@ body {
     }
     .nav__left {
         left: 2px;
-        top: 32px;
+        top: 68px;
         border-radius: 0;
         box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
         max-height: 400px;
     
     }
   }
+
+.table-striped {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 1rem;
+    font-family: 'Roboto', sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.table-striped thead tr {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: left;
+}
+
+.table-striped th,
+.table-striped td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+}
+.table-striped tbody tr {
+    border-bottom: 1px solid #ddd;
+}
+.table-striped tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+.table-striped tbody tr:last-of-type {
+    border-bottom: 2px solid #009879;
+}
+.table-striped tbody tr.active-row {
+    font-weight: bold;
+    color: #009879;
+}

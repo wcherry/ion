@@ -10,6 +10,15 @@ pub struct UserDto {
     pub active: bool,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct NewUserDto {
+    pub username: String,
+    pub password: String,
+    pub email_address: String,
+    pub role: String,
+    pub profile_id: i32,
+}
+
 impl std::convert::From<User> for UserDto {
     fn from(user: User) -> Self {
         UserDto {

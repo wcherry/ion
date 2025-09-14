@@ -11,6 +11,7 @@ actix-files = "0.6.2"
 actix-rt = "2.7.0"
 actix-cors = "0.6.4"
 diesel = { version = "2", features = ["postgres", "r2d2", "chrono", "uuid"] }
+diesel_migrations = { version = "2.2.0"} # , features = ["embed_migrations"] } # Use the appropriate version
 dotenv = "0.15"
 env_logger = "0.10.0"
 log = "0.4"

@@ -9,7 +9,7 @@ use crate::shared;
 #[openapi(
     paths(
     // Auth
-        auth::register_user_handler, 
+        // auth::register_user_handler, 
         auth::login_user_handler,
         auth::logout_handler,
     // Pages
